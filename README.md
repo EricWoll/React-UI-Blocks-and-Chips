@@ -14,7 +14,7 @@ Blocks are larger, more opinionated UI compositions. They may combine multiple c
 
 Clone the repository:
 ```bash
-git clone https://github.com/<your-username>/<your-repo>.git
+git clone https://github.com/EricWoll/React-UI-Blocks-and-Chips.git
 ```
 
 Install dependencies:
