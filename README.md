@@ -12,6 +12,14 @@ Blocks are larger, more opinionated UI compositions. They may combine multiple c
 
 ## Getting Started
 
+### If you want a specific UI Chip or Block
+Install the dependencies
+- [Next.js](https://nextjs.org)
+
+Find the UI Chip or Block in the guthub repo. Then copy and paste into a file in your project.
+
+
+### If you want the full Next.js project
 Clone the repository:
 ```bash
 git clone https://github.com/EricWoll/React-UI-Blocks-and-Chips.git
