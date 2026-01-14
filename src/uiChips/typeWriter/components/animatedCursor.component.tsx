@@ -1,16 +1,28 @@
 import '../cursorBlink.typeWriter.css';
+import clsx from 'clsx';
 
-/* Uses Global "keyframe" named 'blink' */
+interface AnimatedCursorProps extends React.HTMLAttributes<HTMLSpanElement> {
+    isBlinking?: boolean;
+    isVisible?: boolean;
+}
+
+/** Uses "keyframe" named 'blink' */
 export function AnimatedCursor({
     isBlinking = true,
-}: {
-    isBlinking?: boolean;
-}) {
+    isVisible = true,
+    className,
+    ...props
+}: AnimatedCursorProps) {
+    if (!isVisible) return null;
+
     return (
         <span
-            className={`w-[1ch] ${
-                isBlinking ? 'animate-[blink_1s_steps(1)_infinite]' : ''
-            }`}
+            className={clsx(
+                'w-[1ch]',
+                `${isBlinking ? 'animate-[blink_1s_steps(1)_infinite]' : ''}`,
+                className
+            )}
+            {...props}
         >
             |
         </span>

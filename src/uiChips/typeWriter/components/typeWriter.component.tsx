@@ -1,4 +1,4 @@
-'use client';
+import React from 'react';
 import useTypewriterEffect, {
     UseTypewriterOptions,
 } from '../hooks/useTypeWriterEffect.hook';
@@ -6,7 +6,7 @@ import useTypewriterEffect, {
 type TypewriterInJsProps = React.HTMLAttributes<HTMLParagraphElement> &
     UseTypewriterOptions;
 
-export default function TypeWriter({
+export default function TypewriterInJs({
     text,
     startDelay,
     minDelay,
@@ -14,6 +14,7 @@ export default function TypeWriter({
     completionPause,
     isReversing,
     loop,
+    isPaused,
     ...props
 }: TypewriterInJsProps) {
     const typeWriter = useTypewriterEffect({
@@ -24,6 +25,7 @@ export default function TypeWriter({
         completionPause: completionPause,
         isReversing: isReversing,
         loop: true,
+        isPaused: isPaused,
     });
 
     return <p {...props}>{typeWriter.text}</p>;

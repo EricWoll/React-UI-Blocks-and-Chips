@@ -1,4 +1,3 @@
-'use client';
 import { useEffect, useState, useRef } from 'react';
 
 export type UseTypewriterOptions = {
@@ -9,6 +8,7 @@ export type UseTypewriterOptions = {
     completionPause?: number;
     isReversing?: boolean;
     loop?: boolean;
+    isPaused?: boolean;
 };
 
 type TyperwriterState = {
@@ -16,9 +16,10 @@ type TyperwriterState = {
     isReversing: boolean;
     isComplete: boolean;
     textIndex: number;
+    isPaused?: boolean;
 };
 
-export default function useTypeWriterEffect({
+export default function useTypewriterEffect({
     text,
     startDelay = 250,
     minDelay = 75,
@@ -26,6 +27,7 @@ export default function useTypeWriterEffect({
     completionPause = 3000,
     isReversing = false,
     loop = false,
+    isPaused = false,
 }: UseTypewriterOptions) {
     const [state, setState] = useState<TyperwriterState>({
         currentText: isReversing ? text : '',
@@ -38,6 +40,8 @@ export default function useTypeWriterEffect({
 
     useEffect(() => {
         if (!text || text.length === 0) return;
+        if (isPaused) return;
+
         const atInitialStart =
             (!state.isReversing && state.currentText.length === 0) ||
             (state.isReversing && state.currentText.length === text.length);
@@ -116,6 +120,7 @@ export default function useTypeWriterEffect({
         state.currentText,
         state.isReversing,
         state.isComplete,
+        isPaused,
     ]);
 
     const reset = (isReverse: boolean = isReversing) => {
