@@ -136,6 +136,7 @@ export default function useTypewriterEffect({
         text: state.currentText,
         isComplete: state.isComplete,
         isReversing: state.isReversing,
+        isPaused: isPaused,
         textIndex: state.textIndex,
         reset,
     };

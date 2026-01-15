@@ -6,14 +6,14 @@ interface AnimatedCursorProps extends React.HTMLAttributes<HTMLSpanElement> {
     isVisible?: boolean;
 }
 
-/** Uses "keyframe" named 'blink' */
 export function AnimatedCursor({
     isBlinking = true,
     isVisible = true,
     className,
     ...props
 }: AnimatedCursorProps) {
-    if (!isVisible) return null;
+    if (!isVisible)
+        return <div data-blinking={false} data-visible={isVisible}></div>;
 
     return (
         <span
@@ -22,6 +22,8 @@ export function AnimatedCursor({
                 `${isBlinking ? 'animate-[blink_1s_steps(1)_infinite]' : ''}`,
                 className
             )}
+            data-blinking={isBlinking}
+            data-visible={isVisible}
             {...props}
         >
             |

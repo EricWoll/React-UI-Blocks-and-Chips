@@ -28,5 +28,14 @@ export default function TypewriterInJs({
         isPaused: isPaused,
     });
 
-    return <p {...props}>{typeWriter.text}</p>;
+    return (
+        <p
+            data-running={!typeWriter.isPaused}
+            data-reversing={typeWriter.isReversing}
+            data-complete={typeWriter.isComplete}
+            {...props}
+        >
+            {typeWriter.text}
+        </p>
+    );
 }
