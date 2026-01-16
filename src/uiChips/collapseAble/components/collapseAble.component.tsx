@@ -40,7 +40,7 @@ function CollapseAbleMain({
     className,
     ...props
 }: CollapseAbleProps) {
-    const { isOpen } = useCollapseAble();
+    const { isOpen, isControlled: hookIsControlled } = useCollapseAble();
 
     return (
         <div
@@ -50,6 +50,7 @@ function CollapseAbleMain({
             )}
             {...props}
             data-open={isOpen}
+            data-controlled={hookIsControlled}
         >
             {children}
         </div>
@@ -70,7 +71,7 @@ export function CollapseAbleContent({
     durationMs = '300',
     ...props
 }: CollapseAbleContentProps) {
-    const { isOpen } = useCollapseAble();
+    const { isOpen, isControlled } = useCollapseAble();
 
     return (
         <div
@@ -80,6 +81,7 @@ export function CollapseAbleContent({
                 className
             )}
             data-open={isOpen}
+            data-controlled={isControlled}
             {...props}
         >
             {children}
@@ -96,16 +98,13 @@ export function CollapseAbleTitle({
     className,
     ...props
 }: CollapseAbleTitleProps) {
-    const { toggleOpen, isOpen } = useCollapseAble();
+    const { toggleOpen, isOpen, isControlled } = useCollapseAble();
     return (
         <div
             onClick={toggleOpen}
-            className={clsx(
-                'w-full h-fit select-none border-b',
-                !isOpen ? 'border-transparent' : 'border-gray-300',
-                className
-            )}
+            className={clsx('w-full h-fit select-none', className)}
             data-open={isOpen}
+            data-controlled={isControlled}
             {...props}
         >
             {children}
