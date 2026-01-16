@@ -11,7 +11,6 @@ import React, {
 type AccordionMode = 'single' | 'multiple';
 
 interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
-    children: React.ReactNode;
     defaultOpen?: string[];
     isControlled?: boolean;
     controlledOpen?: string[] | undefined;
@@ -26,7 +25,7 @@ interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
     maxOpen?: number;
 }
 
-export default function Accordion({
+function Accordion({
     children,
     defaultOpen = [],
     isControlled = false,
@@ -128,3 +127,6 @@ export default function Accordion({
 
     return <div {...props}>{accordionItems}</div>;
 }
+Accordion.displayName = 'Accordion';
+
+export default Accordion;

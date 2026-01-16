@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 
-export type UseTypewriterOptions = {
+interface UseTypewriterOptions {
     text: string;
     startDelay?: number;
     minDelay?: number;
@@ -9,17 +9,17 @@ export type UseTypewriterOptions = {
     isReversing?: boolean;
     loop?: boolean;
     isPaused?: boolean;
-};
+}
 
-type TyperwriterState = {
+interface TyperwriterState {
     currentText: string;
     isReversing: boolean;
     isComplete: boolean;
     textIndex: number;
     isPaused?: boolean;
-};
+}
 
-export default function useTypewriterEffect({
+function useTypewriterEffect({
     text,
     startDelay = 250,
     minDelay = 75,
@@ -141,3 +141,11 @@ export default function useTypewriterEffect({
         reset,
     };
 }
+
+useTypewriterEffect.displayName = 'useTypewriterEffect';
+
+export {
+    type UseTypewriterOptions,
+    type TyperwriterState,
+    useTypewriterEffect,
+};

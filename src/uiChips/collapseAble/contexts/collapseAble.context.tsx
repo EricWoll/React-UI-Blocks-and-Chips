@@ -19,7 +19,7 @@ interface CollapseAbleProviderProps {
     onOpen?: () => void; // user-initiated only
 }
 
-export default function CollapseAbleProvider({
+function CollapseAbleProvider({
     children,
     defaultOpen = false,
     isControlled = false,
@@ -65,8 +65,9 @@ export default function CollapseAbleProvider({
         </CollapseAbleContext.Provider>
     );
 }
+CollapseAbleProvider.displayName = 'CollapseAbleProvider';
 
-export function useCollapseAble() {
+function useCollapseAble() {
     const context = useContext(CollapseAbleContext);
     if (!context) {
         throw new Error(
@@ -75,3 +76,6 @@ export function useCollapseAble() {
     }
     return context;
 }
+useCollapseAble.displayName = 'useCollapseAble';
+
+export { CollapseAbleProvider, useCollapseAble };

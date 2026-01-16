@@ -1,12 +1,13 @@
 import React from 'react';
-import useTypewriterEffect, {
+import {
+    useTypewriterEffect,
     UseTypewriterOptions,
 } from '../hooks/useTypeWriterEffect.hook';
 
 type TypewriterInJsProps = React.HTMLAttributes<HTMLParagraphElement> &
     UseTypewriterOptions;
 
-export default function TypewriterInJs({
+function TypewriterInJs({
     text,
     startDelay,
     minDelay,
@@ -39,3 +40,6 @@ export default function TypewriterInJs({
         </p>
     );
 }
+
+TypewriterInJs.displayName = 'TypewriterInJs';
+export { TypewriterInJs };

@@ -6,7 +6,7 @@ interface AnimatedCursorProps extends React.HTMLAttributes<HTMLSpanElement> {
     isVisible?: boolean;
 }
 
-export function AnimatedCursor({
+function AnimatedCursor({
     isBlinking = true,
     isVisible = true,
     className,
@@ -30,3 +30,6 @@ export function AnimatedCursor({
         </span>
     );
 }
+AnimatedCursor.displayName = 'AnimatedCursor';
+
+export { AnimatedCursor };

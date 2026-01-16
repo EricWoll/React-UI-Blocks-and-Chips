@@ -1,11 +1,10 @@
 import clsx from 'clsx';
-import CollapseAbleProvider, {
+import {
+    CollapseAbleProvider,
     useCollapseAble,
 } from '../contexts/collapseAble.context';
 
-export interface CollapseAbleProps
-    extends React.HTMLAttributes<HTMLDivElement> {
-    children: React.ReactNode;
+interface iCollapseAble {
     defaultOpen?: boolean;
     isControlled?: boolean | undefined;
     controlledIsOpen?: boolean | undefined;
@@ -13,7 +12,9 @@ export interface CollapseAbleProps
     key?: React.Key;
 }
 
-export function CollapseAble({
+type CollapseAbleProps = iCollapseAble & React.HTMLAttributes<HTMLDivElement>;
+
+function CollapseAble({
     children,
     defaultOpen,
     isControlled,
@@ -29,18 +30,18 @@ export function CollapseAble({
             controlledIsOpen={controlledIsOpen}
             onOpen={onOpen}
         >
-            <CollapseAbleMain {...props}>{children}</CollapseAbleMain>
+            <CollapseAbleContainer {...props}>{children}</CollapseAbleContainer>
         </CollapseAbleProvider>
     );
 }
+CollapseAble.displayName = 'CollapseAble';
 
-function CollapseAbleMain({
+function CollapseAbleContainer({
     children,
-    isControlled,
     className,
     ...props
-}: CollapseAbleProps) {
-    const { isOpen, isControlled: hookIsControlled } = useCollapseAble();
+}: React.HTMLAttributes<HTMLDivElement>) {
+    const { isOpen, isControlled } = useCollapseAble();
 
     return (
         <div
@@ -50,21 +51,41 @@ function CollapseAbleMain({
             )}
             {...props}
             data-open={isOpen}
-            data-controlled={hookIsControlled}
+            data-controlled={isControlled}
         >
             {children}
         </div>
     );
 }
+CollapseAbleContainer.displayName = 'CollapseAbleContainer';
+
+function CollapseAbleTitle({
+    children,
+    className,
+    ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+    const { toggleOpen, isOpen, isControlled } = useCollapseAble();
+    return (
+        <div
+            onClick={toggleOpen}
+            className={clsx('w-full h-fit select-none', className)}
+            data-open={isOpen}
+            data-controlled={isControlled}
+            {...props}
+        >
+            {children}
+        </div>
+    );
+}
+CollapseAbleTitle.displayName = 'CollapseAbleTitle';
 
 interface CollapseAbleContentProps
     extends React.HTMLAttributes<HTMLDivElement> {
-    children: React.ReactNode;
     maxHeight?: string;
     durationMs?: string;
 }
 
-export function CollapseAbleContent({
+function CollapseAbleContent({
     children,
     className,
     maxHeight = 'fit',
@@ -88,26 +109,11 @@ export function CollapseAbleContent({
         </div>
     );
 }
+CollapseAbleContent.displayName = 'CollapseAbleContent';
 
-interface CollapseAbleTitleProps extends React.HTMLAttributes<HTMLDivElement> {
-    children: React.ReactNode;
-}
-
-export function CollapseAbleTitle({
-    children,
-    className,
-    ...props
-}: CollapseAbleTitleProps) {
-    const { toggleOpen, isOpen, isControlled } = useCollapseAble();
-    return (
-        <div
-            onClick={toggleOpen}
-            className={clsx('w-full h-fit select-none', className)}
-            data-open={isOpen}
-            data-controlled={isControlled}
-            {...props}
-        >
-            {children}
-        </div>
-    );
-}
+export {
+    type iCollapseAble,
+    CollapseAble,
+    CollapseAbleTitle,
+    CollapseAbleContent,
+};
