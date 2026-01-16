@@ -1,6 +1,5 @@
 import React from 'react';
-import {
-    useTypewriterEffect,
+import useTypewriterEffect, {
     UseTypewriterOptions,
 } from '../hooks/useTypeWriterEffect.hook';
 
@@ -42,4 +41,4 @@ function TypewriterInJs({
 }
 
 TypewriterInJs.displayName = 'TypewriterInJs';
-export { TypewriterInJs };
+export default TypewriterInJs;

@@ -144,8 +144,6 @@ function useTypewriterEffect({
 
 useTypewriterEffect.displayName = 'useTypewriterEffect';
 
-export {
-    type UseTypewriterOptions,
-    type TyperwriterState,
-    useTypewriterEffect,
-};
+export { type UseTypewriterOptions, type TyperwriterState };
+
+export default useTypewriterEffect;

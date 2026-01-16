@@ -32,4 +32,4 @@ function AnimatedCursor({
 }
 AnimatedCursor.displayName = 'AnimatedCursor';
 
-export { AnimatedCursor };
+export default AnimatedCursor;
