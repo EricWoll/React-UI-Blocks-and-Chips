@@ -20,7 +20,7 @@ function AnimatedCursor({
             className={clsx(
                 'w-[1ch]',
                 `${isBlinking ? 'animate-[blink_1s_steps(1)_infinite]' : ''}`,
-                className
+                className,
             )}
             data-blinking={isBlinking}
             data-visible={isVisible}
