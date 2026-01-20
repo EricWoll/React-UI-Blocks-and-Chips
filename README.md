@@ -1,6 +1,6 @@
 # Reusable UI Chips and Blocks
 
-This repository contains a [Next.js](https://nextjs.org) project that serves as a library of reusable UI components. It is intended as a central place to build, preview, and maintain small UI elements ("chips") and larger UI compositions ("blocks").
+This repository contains a [Next.js](https://nextjs.org) project that serves as a library of reusable UI components. It is intended as a central place to build, preview, and maintain small UI elements ("chips") and larger UI compositions ("blocks"). This repository will also contain usefull tools to help speed up website creation.
 
 ## Dependencies
 - React
