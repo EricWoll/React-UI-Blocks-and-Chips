@@ -1,3 +1,4 @@
+import isElement from '@/uiTools/isElement.uiTools';
 import React, {
     Children,
     useMemo,
@@ -6,6 +7,8 @@ import React, {
     HTMLAttributes,
     ReactNode,
 } from 'react';
+
+/* Requires Function "isElement" from uiTools folder */
 
 interface TabItemProps extends HTMLAttributes<HTMLDivElement> {
     isActive?: boolean;
@@ -26,24 +29,10 @@ interface TabsProps extends HTMLAttributes<HTMLDivElement> {
     currentTab: string;
 }
 
-function isTabElement(
-    node: ReactNode,
-): node is React.ReactElement<TabItemProps> {
-    if (!isValidElement(node)) return false;
-    const t: any = node.type;
-    return (
-        t === TabItem ||
-        (typeof t === 'function' &&
-            (t.displayName === 'TabItem' || t.name === 'TabItem'))
-    );
-}
-
 function Tabs({ children, currentTab, className, ...props }: TabsProps) {
     const items = useMemo(() => {
         return Children.toArray(children).map((child) => {
-            if (!isTabElement(child)) {
-                return child;
-            }
+            if (!isElement(child, TabItem, 'TabItem')) return child;
 
             const id = child.props.id;
 

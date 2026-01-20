@@ -1,4 +1,5 @@
 import { CollapseAble } from '@/uiChips/collapseAble/components/collapseAble.component';
+import isElement from '@/uiTools/isElement.uiTools';
 
 import React, {
     useState,
@@ -7,6 +8,8 @@ import React, {
     useRef,
     useEffect,
 } from 'react';
+
+/* Requires Function "isElement" from uiTools folder */
 
 type AccordionMode = 'single' | 'multiple';
 
@@ -37,11 +40,11 @@ function Accordion({
 }: AccordionProps) {
     const childrenArray = useMemo(
         () => React.Children.toArray(children) as React.ReactElement[],
-        [children]
+        [children],
     );
     const childKeys = useMemo(
         () => childrenArray.map((c) => (c?.key != null ? String(c.key) : '')),
-        [childrenArray]
+        [childrenArray],
     );
 
     const [opened, setOpened] = useState<string[]>(defaultOpen);
@@ -95,12 +98,12 @@ function Accordion({
                 return [...prev, id];
             });
         },
-        [isControlled, onUpdate, isSingleMode, normalizedMaxOpen]
+        [isControlled, onUpdate, isSingleMode, normalizedMaxOpen],
     );
 
     const accordionItems = useMemo(() => {
         return childrenArray.map((child) => {
-            if (!React.isValidElement(child)) return child;
+            if (!isElement(child, CollapseAble, 'CollapseAble')) return child;
 
             const key = (child.key ?? '') as string;
             const isOpen = key ? effectiveOpen.includes(key) : false;
@@ -120,7 +123,7 @@ function Accordion({
 
             return React.cloneElement(
                 child as React.ReactElement<any>,
-                cloneProps
+                cloneProps,
             );
         });
     }, [childrenArray, effectiveOpen, toggleOpen]);
