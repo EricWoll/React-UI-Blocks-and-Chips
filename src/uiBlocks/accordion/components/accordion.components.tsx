@@ -1,5 +1,5 @@
 import { CollapseAble } from '@/uiChips/collapseAble/components/collapseAble.component';
-import isElement from '@/uiTools/isElement.uiTools';
+import { itemsToRender } from '@/uiTools/itemsToRender.uiTools';
 
 import React, {
     useState,
@@ -101,32 +101,25 @@ function Accordion({
         [isControlled, onUpdate, isSingleMode, normalizedMaxOpen],
     );
 
-    const accordionItems = useMemo(() => {
-        return childrenArray.map((child) => {
-            if (!isElement(child, CollapseAble, 'CollapseAble')) return child;
-
-            const key = (child.key ?? '') as string;
-            const isOpen = key ? effectiveOpen.includes(key) : false;
-
-            const cloneProps: Partial<
-                React.ComponentProps<typeof CollapseAble>
-            > = {
-                isControlled: true,
-                controlledIsOpen: isOpen,
-                onOpen: () => {
-                    if (key) toggleOpen(key);
-                },
-                defaultOpen: key
-                    ? initialDefaultSetRef.current.has(key)
-                    : false,
-            };
-
-            return React.cloneElement(
-                child as React.ReactElement<any>,
-                cloneProps,
-            );
-        });
-    }, [childrenArray, effectiveOpen, toggleOpen]);
+    const accordionItems = useMemo(
+        () =>
+            itemsToRender({
+                children,
+                matchComponent: CollapseAble,
+                displayName: 'CollapseAble',
+                getInjectedProps: (child) => ({
+                    isControlled: true,
+                    controlledIsOpen: child.key
+                        ? effectiveOpen.includes(child.key as string)
+                        : false,
+                    onOpen: () => toggleOpen(child.key as string),
+                    defaultOpen: child.key
+                        ? initialDefaultSetRef.current.has(child.key as string)
+                        : false,
+                }),
+            }),
+        [children, effectiveOpen, toggleOpen],
+    );
 
     return <div {...props}>{accordionItems}</div>;
 }

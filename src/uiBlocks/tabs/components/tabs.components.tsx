@@ -7,18 +7,19 @@ import React, {
     HTMLAttributes,
     ReactNode,
 } from 'react';
+import { itemsToRender } from '@/uiTools/itemsToRender.uiTools';
 
-/* Requires Function "isElement" from uiTools folder */
+/* Requires Function "itemsToRender" from Tools folder */
 
 interface TabItemProps extends HTMLAttributes<HTMLDivElement> {
     isActive?: boolean;
-    id: string;
+    tabId: string;
 }
 
-function TabItem({ children, isActive, id, ...props }: TabItemProps) {
+function TabItem({ children, isActive, tabId, ...props }: TabItemProps) {
     if (!isActive) return null;
     return (
-        <div id={id} {...props}>
+        <div data-tab-id={tabId} key={tabId} {...props}>
             {children}
         </div>
     );
@@ -30,23 +31,22 @@ interface TabsProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 function Tabs({ children, currentTab, className, ...props }: TabsProps) {
-    const items = useMemo(() => {
-        return Children.toArray(children).map((child) => {
-            if (!isElement(child, TabItem, 'TabItem')) return child;
-
-            const id = child.props.id;
-
-            return cloneElement(child, {
-                isActive: id === currentTab,
-                id,
-                className: child.props.className,
-            } as Partial<React.ComponentProps<typeof TabItem>>);
-        });
-    }, [children, currentTab]);
+    const tabItems = useMemo(
+        () =>
+            itemsToRender<TabItemProps>({
+                children,
+                matchComponent: TabItem,
+                displayName: 'TabItem',
+                getInjectedProps: (child) => ({
+                    isActive: child.props.tabId === currentTab,
+                }),
+            }),
+        [children, currentTab],
+    );
 
     return (
         <div className={className} {...props} data-active-tab={currentTab}>
-            {items}
+            {tabItems}
         </div>
     );
 }

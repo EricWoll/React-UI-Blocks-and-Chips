@@ -47,7 +47,7 @@ function CollapseAbleContainer({
         <div
             className={clsx(
                 'w-96 border border-gray-400 rounded-sm p-1',
-                className
+                className,
             )}
             {...props}
             data-open={isOpen}
@@ -79,8 +79,7 @@ function CollapseAbleTitle({
 }
 CollapseAbleTitle.displayName = 'CollapseAbleTitle';
 
-interface CollapseAbleContentProps
-    extends React.HTMLAttributes<HTMLDivElement> {
+interface CollapseAbleContentProps extends React.HTMLAttributes<HTMLDivElement> {
     maxHeight?: string;
     durationMs?: string;
 }
@@ -99,7 +98,7 @@ function CollapseAbleContent({
             className={clsx(
                 `w-full transition-all duration-[${durationMs}] ease-in-out`,
                 !isOpen ? 'h-0 overflow-hidden' : `h-[${maxHeight}]`,
-                className
+                className,
             )}
             data-open={isOpen}
             data-controlled={isControlled}
