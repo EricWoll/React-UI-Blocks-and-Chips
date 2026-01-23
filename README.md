@@ -3,6 +3,7 @@
 This repository contains a [Next.js](https://nextjs.org) project that serves as a library of reusable UI components. It is intended as a central place to build, preview, and maintain small UI elements ("chips") and larger UI compositions ("blocks"). This repository will also contain usefull tools to help speed up website creation.
 
 ## Dependencies
+
 - React
 - Tailwind
 - Typescript
@@ -18,7 +19,9 @@ Blocks are larger, more opinionated UI compositions. They may combine multiple c
 ## Getting Started
 
 ### If you want a specific UI Chip or Block
+
 Install React and Typescript
+
 ```bash
 npm install react@latest react-dom@latest
 npm install --save-dev typescript @types/react @types/react-dom @types/node
@@ -28,19 +31,22 @@ Install [Tailwind](https://tailwindcss.com/docs/installation/using-vite)
 
 Find the UI Chip or Block in the guthub repo. Then copy and paste into a file in your project.
 
-
 ### If you want the full Next.js project
+
 Clone the repository:
+
 ```bash
 git clone https://github.com/EricWoll/React-UI-Blocks-and-Chips.git
 ```
 
 Install dependencies:
+
 ```bash
 npm install
 ```
 
 Start the development server:
+
 ```bash
 npm run dev
 ```
