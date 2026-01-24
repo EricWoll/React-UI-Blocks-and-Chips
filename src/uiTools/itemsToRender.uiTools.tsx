@@ -69,19 +69,12 @@ export function itemsToRender<T>({
             onFail?.(child);
             return child;
         }
-
-        if (filter && !filter(child)) {
-            return null;
-        }
-
-        if (shouldRender && !shouldRender(child)) {
-            return null;
-        }
+        if (filter && !filter(child)) return null;
+        if (shouldRender && !shouldRender(child)) return null;
 
         onMatch?.(child);
 
         let injectedProps = getInjectedProps(child);
-
         if (transform) {
             injectedProps = transform(child, injectedProps);
         }
