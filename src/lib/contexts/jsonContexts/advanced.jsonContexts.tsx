@@ -8,7 +8,7 @@ import {
     useState,
 } from 'react';
 
-import { readFileAsText } from './jsonTools.json';
+import { readFileAsText } from './jsonTools.jsonContexts';
 
 type AdvancedFileDataContextType<T> = {
     data: T | null;

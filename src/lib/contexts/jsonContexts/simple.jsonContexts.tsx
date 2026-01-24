@@ -8,7 +8,7 @@ import React, {
     ReactNode,
 } from 'react';
 
-import { readFileAsText } from './jsonTools.json';
+import { readFileAsText } from './jsonTools.jsonContexts';
 
 type SimpleFileDataContextType<T> = {
     data: T | null;

@@ -1,25 +1,19 @@
 import {
     CollapseAble,
     iCollapseAble,
-} from '@/uiChips/collapseAble/components/collapseAble.component';
-import { itemsToRender } from '@/uiTools/itemsToRender.uiTools';
-import isElement from '@/uiTools/isElement.uiTools';
+} from '@/components/uiChips/collapseAble/components/collapseAble.uiChips.components';
+import { itemsToRender } from '@/tools/uiTools/itemsToRender.uiTools';
+import isElement from '@/tools/uiTools/isElement.uiTools';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 
 type AccordionMode = 'single' | 'multiple';
 
 interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
-    /** IDs of items that should be open by default */
     defaultOpen?: string[];
-    /** Whether the open state is controlled externally */
     isControlled?: boolean;
-    /** Controlled open state (only used when isControlled is true) */
     controlledOpen?: string[];
-    /** Callback fired when accordion state updates */
     onUpdate?: () => void;
-    /** 'single' = at most one open, 'multiple' = multiple allowed */
     mode?: AccordionMode;
-    /** Maximum number of simultaneously open items (<=0 means unlimited) */
     maxOpen?: number;
 }
 

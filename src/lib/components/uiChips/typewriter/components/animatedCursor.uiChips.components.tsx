@@ -1,4 +1,4 @@
-import '../cursorBlink.typeWriter.css';
+import '../styling/cursorBlink.typeWriter.css';
 import clsx from 'clsx';
 
 interface AnimatedCursorProps extends React.HTMLAttributes<HTMLSpanElement> {

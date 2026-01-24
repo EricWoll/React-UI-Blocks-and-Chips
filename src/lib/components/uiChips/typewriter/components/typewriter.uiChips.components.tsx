@@ -1,7 +1,7 @@
 import React from 'react';
 import useTypewriterEffect, {
     UseTypewriterOptions,
-} from '../hooks/useTypeWriterEffect.hook';
+} from '../hooks/useTypewriterEffect.uiChips.hooks';
 
 type TypewriterInJsProps = React.HTMLAttributes<HTMLParagraphElement> &
     UseTypewriterOptions;
@@ -20,7 +20,7 @@ type TypewriterInJsProps = React.HTMLAttributes<HTMLParagraphElement> &
  *   maxDelay={150}
  * />
  */
-function TypewriterInJs({
+function TypewriterEffect({
     text,
     startDelay,
     minDelayMs,
@@ -55,5 +55,5 @@ function TypewriterInJs({
     );
 }
 
-TypewriterInJs.displayName = 'TypewriterInJs';
-export default TypewriterInJs;
+TypewriterEffect.displayName = 'TypewriterEffect';
+export default TypewriterEffect;
