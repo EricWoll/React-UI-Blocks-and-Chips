@@ -1,82 +1,132 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 
 interface UseTypewriterOptions {
     text: string;
     startDelay?: number;
-    minDelay?: number;
-    maxDelay?: number;
+    minDelayMs?: number;
+    maxDelayMs?: number;
     completionPause?: number;
     isReversing?: boolean;
     loop?: boolean;
     isPaused?: boolean;
 }
 
-interface TyperwriterState {
+interface TypewriterState {
     currentText: string;
     isReversing: boolean;
     isComplete: boolean;
-    textIndex: number;
-    isPaused?: boolean;
 }
 
+/**
+ * Hook that creates a typewriter effect for text.
+ *
+ * Supports forward typing, reverse typing (deletion), looping, and pausing.
+ * Character delays are randomized between minDelay and maxDelay for natural effect.
+ *
+ * @param options - Configuration options for the typewriter effect
+ * @param options.text - Text to type out
+ * @param options.startDelay - Delay before typing starts (ms, default: 250)
+ * @param options.minDelay - Minimum delay between characters (ms, default: 75)
+ * @param options.maxDelay - Maximum delay between characters (ms, default: 300)
+ * @param options.completionPause - Pause duration when typing completes before looping (ms, default: 3000)
+ * @param options.isReversing - Start in reverse mode/deleting (default: false)
+ * @param options.loop - Loop the typing animation (default: false)
+ * @param options.isPaused - Pause the animation (default: false)
+ *
+ * @returns Typewriter state and controls
+ * @returns text - The current text being displayed (partially typed)
+ * @returns isComplete - Whether the typing animation has completed
+ * @returns isReversing - Whether currently in reverse/deletion mode
+ * @returns isPaused - Whether the animation is currently paused
+ * @returns reset - Function to reset the typewriter to initial state, optionally specify reverse mode
+ *
+ * @example
+ * const typewriter = useTypewriterEffect({
+ *   text: "Hello, World!",
+ *   loop: true,
+ *   minDelay: 50,
+ *   maxDelay: 150,
+ * });
+ *
+ * return (
+ *   <div>
+ *     <p>{typewriter.text}</p>
+ *     <button onClick={() => typewriter.reset()}>Reset</button>
+ *   </div>
+ * );
+ */
 function useTypewriterEffect({
     text,
     startDelay = 250,
-    minDelay = 75,
-    maxDelay = 300,
+    minDelayMs = 75,
+    maxDelayMs = 300,
     completionPause = 3000,
     isReversing = false,
     loop = false,
     isPaused = false,
 }: UseTypewriterOptions) {
-    const [state, setState] = useState<TyperwriterState>({
+    const [state, setState] = useState<TypewriterState>({
         currentText: isReversing ? text : '',
         isReversing: isReversing,
         isComplete: false,
-        textIndex: isReversing ? Math.max(text.length - 1, 0) : 0,
     });
 
     const timerRef = useRef<number | null>(null);
 
-    useEffect(() => {
-        if (!text || text.length === 0) return;
-        if (isPaused) return;
+    // Store config in refs to avoid effect re-runs
+    const configRef = useRef({
+        startDelay,
+        minDelayMs,
+        maxDelayMs,
+        completionPause,
+        loop,
+    });
 
+    // Update config ref when values change
+    useEffect(() => {
+        configRef.current = {
+            startDelay,
+            minDelayMs,
+            maxDelayMs,
+            completionPause,
+            loop,
+        };
+    }, [startDelay, minDelayMs, maxDelayMs, completionPause, loop]);
+
+    useEffect(() => {
+        if (!text || text.length === 0 || isPaused) return;
+
+        const config = configRef.current;
         const atInitialStart =
             (!state.isReversing && state.currentText.length === 0) ||
             (state.isReversing && state.currentText.length === text.length);
 
-        // Sets Up Delay
-        let delay = startDelay;
+        // Calculate delay
+        let delay = config.startDelay;
         if (state.isComplete) {
-            delay = completionPause;
-        }
-        if (!state.isComplete && !atInitialStart) {
+            delay = config.completionPause;
+        } else if (!atInitialStart) {
             delay =
-                Math.floor(Math.random() * (maxDelay - minDelay + 1)) +
-                minDelay;
+                Math.floor(
+                    Math.random() * (config.maxDelayMs - config.minDelayMs + 1),
+                ) + config.minDelayMs;
         }
 
         timerRef.current = window.setTimeout(() => {
             setState((prev) => {
+                // Handle completion and looping
                 if (prev.isComplete) {
-                    if (!loop) return prev;
+                    if (!config.loop) return prev;
 
                     const nextIsReversing = !prev.isReversing;
-
-                    // loop complete, reset to start
                     return {
-                        ...prev,
                         isComplete: false,
                         isReversing: nextIsReversing,
                         currentText: nextIsReversing ? text : '',
-                        textIndex: nextIsReversing
-                            ? Math.max(text.length - 1, 0)
-                            : 0,
                     };
                 }
 
-                // Forward Typing
+                // Forward typing
                 if (!prev.isReversing) {
                     const nextText = text.slice(0, prev.currentText.length + 1);
                     const done = nextText.length === text.length;
@@ -84,66 +134,59 @@ function useTypewriterEffect({
                         ...prev,
                         currentText: nextText,
                         isComplete: done,
-                        textIndex: Math.min(
-                            prev.textIndex + 1,
-                            Math.max(text.length - 1, 0)
-                        ),
                     };
                 }
 
-                // Reversing typing
+                // Reverse typing
                 const nextText = prev.currentText.slice(0, -1);
                 const done = nextText.length === 0;
                 return {
                     ...prev,
                     currentText: nextText,
                     isComplete: done,
-                    textIndex: Math.max(prev.textIndex - 1, 0),
                 };
             });
         }, delay);
 
         return () => {
-            if (timerRef.current) {
+            if (timerRef.current !== null) {
                 clearTimeout(timerRef.current);
                 timerRef.current = null;
             }
         };
     }, [
         text,
-        startDelay,
-        minDelay,
-        maxDelay,
-        completionPause,
-        isReversing,
-        loop,
         state.currentText,
         state.isReversing,
         state.isComplete,
         isPaused,
     ]);
 
-    const reset = (isReverse: boolean = isReversing) => {
-        setState({
-            currentText: isReverse ? text : '',
-            isReversing: isReverse,
-            isComplete: false,
-            textIndex: isReverse ? Math.max(text.length - 1, 0) : 0,
-        });
-    };
+    const reset = useCallback(
+        (resetToReverse: boolean = isReversing) => {
+            if (timerRef.current !== null) {
+                clearTimeout(timerRef.current);
+                timerRef.current = null;
+            }
+            setState({
+                currentText: resetToReverse ? text : '',
+                isReversing: resetToReverse,
+                isComplete: false,
+            });
+        },
+        [text, isReversing],
+    );
 
     return {
         text: state.currentText,
         isComplete: state.isComplete,
         isReversing: state.isReversing,
         isPaused: isPaused,
-        textIndex: state.textIndex,
         reset,
     };
 }
 
 useTypewriterEffect.displayName = 'useTypewriterEffect';
 
-export { type UseTypewriterOptions, type TyperwriterState };
-
+export { type UseTypewriterOptions, type TypewriterState };
 export default useTypewriterEffect;

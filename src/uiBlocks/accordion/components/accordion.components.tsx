@@ -1,33 +1,40 @@
-import { CollapseAble } from '@/uiChips/collapseAble/components/collapseAble.component';
+import {
+    CollapseAble,
+    iCollapseAble,
+} from '@/uiChips/collapseAble/components/collapseAble.component';
 import { itemsToRender } from '@/uiTools/itemsToRender.uiTools';
-
-import React, {
-    useState,
-    useMemo,
-    useCallback,
-    useRef,
-    useEffect,
-} from 'react';
-
-/* Requires Function "isElement" from uiTools folder */
+import isElement from '@/uiTools/isElement.uiTools';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 
 type AccordionMode = 'single' | 'multiple';
 
 interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
+    /** IDs of items that should be open by default */
     defaultOpen?: string[];
+    /** Whether the open state is controlled externally */
     isControlled?: boolean;
-    controlledOpen?: string[] | undefined;
+    /** Controlled open state (only used when isControlled is true) */
+    controlledOpen?: string[];
+    /** Callback fired when accordion state updates */
     onUpdate?: () => void;
-    /**
-     * 'single' = at most one OPEN,
-     * 'multiple' = multiple allowed.
-     * Note: maxOpen can implicitly enforce single if set to 1.
-     */
+    /** 'single' = at most one open, 'multiple' = multiple allowed */
     mode?: AccordionMode;
-    /** Maximum number of simultaneously OPEN items (<=0 means unlimited) */
+    /** Maximum number of simultaneously open items (<=0 means unlimited) */
     maxOpen?: number;
 }
 
+/**
+ * Accordion component that manages CollapseAble children.
+ *
+ * Uses collapseAbleId prop to track which items are open.
+ * Can operate in controlled or uncontrolled mode with single or multiple selection.
+ *
+ * @example
+ * <Accordion mode="single" defaultOpen={['item-1']}>
+ *   <CollapseAble collapseAbleId="item-1">Content 1</CollapseAble>
+ *   <CollapseAble collapseAbleId="item-2">Content 2</CollapseAble>
+ * </Accordion>
+ */
 function Accordion({
     children,
     defaultOpen = [],
@@ -38,39 +45,45 @@ function Accordion({
     maxOpen = -1,
     ...props
 }: AccordionProps) {
-    const childrenArray = useMemo(
-        () => React.Children.toArray(children) as React.ReactElement[],
-        [children],
-    );
-    const childKeys = useMemo(
-        () => childrenArray.map((c) => (c?.key != null ? String(c.key) : '')),
-        [childrenArray],
-    );
-
     const [opened, setOpened] = useState<string[]>(defaultOpen);
+    const effectiveOpen = isControlled ? (controlledOpen ?? []) : opened;
 
-    const effectiveOpen = controlledOpen ?? opened;
+    // Extract child IDs from CollapseAble children only
+    const childIds = useMemo(() => {
+        const ids: string[] = [];
+        React.Children.forEach(children, (child) => {
+            if (isElement<iCollapseAble>(child, CollapseAble, 'CollapseAble')) {
+                const id = child.props.collapseAbleId;
+                if (id && id.length > 0) {
+                    ids.push(id);
+                }
+            }
+        });
+        return ids;
+    }, [children]);
 
-    const initialDefaultSetRef = useRef<Set<string>>(new Set(defaultOpen));
-
-    const normalizedMaxOpen =
-        maxOpen != null && maxOpen > 0 ? maxOpen : Number.POSITIVE_INFINITY;
+    const normalizedMaxOpen = useMemo(
+        () => (maxOpen > 0 ? maxOpen : Number.POSITIVE_INFINITY),
+        [maxOpen],
+    );
 
     const isSingleMode = mode === 'single' || normalizedMaxOpen === 1;
 
+    const defaultOpenSet = useMemo(() => new Set(defaultOpen), [defaultOpen]);
+
+    // Cleanup: remove opened items that no longer exist in children
     useEffect(() => {
-        if (isControlled) return;
-        if (childKeys.length === 0) return;
+        if (isControlled || childIds.length === 0) return;
+        setOpened((prev) => prev.filter((id) => childIds.includes(id)));
+    }, [childIds, isControlled]);
 
-        setOpened((prev) => prev.filter((k) => childKeys.includes(k)));
-    }, [childKeys, isControlled]);
-
+    // Enforce maxOpen limit
     useEffect(() => {
-        if (isControlled) return;
-
+        if (isControlled || normalizedMaxOpen === Number.POSITIVE_INFINITY)
+            return;
         setOpened((prev) => {
             if (prev.length <= normalizedMaxOpen) return prev;
-            return prev.slice(prev.length - normalizedMaxOpen);
+            return prev.slice(-normalizedMaxOpen);
         });
     }, [normalizedMaxOpen, isControlled]);
 
@@ -82,6 +95,7 @@ function Accordion({
             setOpened((prev) => {
                 const isOpen = prev.includes(id);
 
+                // Single mode: only one item open at a time
                 if (isSingleMode) {
                     return isOpen ? [] : [id];
                 }
@@ -101,28 +115,29 @@ function Accordion({
         [isControlled, onUpdate, isSingleMode, normalizedMaxOpen],
     );
 
-    const accordionItems = useMemo(
+    const items = useMemo(
         () =>
-            itemsToRender({
+            itemsToRender<iCollapseAble>({
                 children,
                 matchComponent: CollapseAble,
                 displayName: 'CollapseAble',
-                getInjectedProps: (child) => ({
-                    isControlled: true,
-                    controlledIsOpen: child.key
-                        ? effectiveOpen.includes(child.key as string)
-                        : false,
-                    onOpen: () => toggleOpen(child.key as string),
-                    defaultOpen: child.key
-                        ? initialDefaultSetRef.current.has(child.key as string)
-                        : false,
-                }),
+                getInjectedProps: (child) => {
+                    const id = child.props.collapseAbleId;
+                    if (!id) return {};
+
+                    return {
+                        isControlled: true,
+                        controlledIsOpen: effectiveOpen.includes(id),
+                        onOpen: () => toggleOpen(id),
+                        defaultOpen: defaultOpenSet.has(id),
+                    };
+                },
             }),
-        [children, effectiveOpen, toggleOpen],
+        [children, effectiveOpen, toggleOpen, defaultOpenSet],
     );
 
-    return <div {...props}>{accordionItems}</div>;
+    return <div {...props}>{items}</div>;
 }
-Accordion.displayName = 'Accordion';
 
+Accordion.displayName = 'Accordion';
 export default Accordion;

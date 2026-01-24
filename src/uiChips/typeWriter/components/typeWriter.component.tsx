@@ -6,36 +6,51 @@ import useTypewriterEffect, {
 type TypewriterInJsProps = React.HTMLAttributes<HTMLParagraphElement> &
     UseTypewriterOptions;
 
+/**
+ * Typewriter text animation component.
+ *
+ * Renders text with a typewriter effect, supporting forward typing,
+ * reverse typing (deletion), looping, and pausing.
+ *
+ * @example
+ * <TypewriterInJs
+ *   text="Hello, World!"
+ *   loop={true}
+ *   minDelay={50}
+ *   maxDelay={150}
+ * />
+ */
 function TypewriterInJs({
     text,
     startDelay,
-    minDelay,
-    maxDelay,
+    minDelayMs,
+    maxDelayMs,
     completionPause,
     isReversing,
     loop,
     isPaused,
     ...props
 }: TypewriterInJsProps) {
-    const typeWriter = useTypewriterEffect({
-        text: text,
-        startDelay: startDelay,
-        minDelay: minDelay,
-        maxDelay: maxDelay,
-        completionPause: completionPause,
-        isReversing: isReversing,
-        loop: true,
-        isPaused: isPaused,
+    const typewriter = useTypewriterEffect({
+        text,
+        startDelay,
+        minDelayMs,
+        maxDelayMs,
+        completionPause,
+        isReversing,
+        loop,
+        isPaused,
     });
 
     return (
         <p
-            data-running={!typeWriter.isPaused}
-            data-reversing={typeWriter.isReversing}
-            data-complete={typeWriter.isComplete}
+            data-is-paused={typewriter.isPaused}
+            data-running={!typewriter.isPaused && !typewriter.isComplete}
+            data-reversing={typewriter.isReversing}
+            data-complete={typewriter.isComplete}
             {...props}
         >
-            {typeWriter.text}
+            {typewriter.text}
         </p>
     );
 }

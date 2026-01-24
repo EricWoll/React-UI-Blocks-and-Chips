@@ -1,4 +1,4 @@
-@keyframes blink {
+@keyframes cursor-blink {
     0%,
     100% {
         opacity: 1;

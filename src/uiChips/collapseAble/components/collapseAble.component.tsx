@@ -5,11 +5,11 @@ import {
 } from '../contexts/collapseAble.context';
 
 interface iCollapseAble {
+    collapseAbleId: string;
     defaultOpen?: boolean;
     isControlled?: boolean | undefined;
     controlledIsOpen?: boolean | undefined;
     onOpen?: () => void;
-    key?: React.Key;
 }
 
 type CollapseAbleProps = iCollapseAble & React.HTMLAttributes<HTMLDivElement>;
@@ -20,7 +20,7 @@ function CollapseAble({
     isControlled,
     controlledIsOpen,
     onOpen,
-    key,
+    collapseAbleId,
     ...props
 }: CollapseAbleProps) {
     return (
@@ -29,6 +29,7 @@ function CollapseAble({
             defaultOpen={defaultOpen}
             controlledIsOpen={controlledIsOpen}
             onOpen={onOpen}
+            collapseAbleId={collapseAbleId}
         >
             <CollapseAbleContainer {...props}>{children}</CollapseAbleContainer>
         </CollapseAbleProvider>
@@ -41,7 +42,7 @@ function CollapseAbleContainer({
     className,
     ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-    const { isOpen, isControlled } = useCollapseAble();
+    const { isOpen, isControlled, collapseAbleId } = useCollapseAble();
 
     return (
         <div
@@ -52,6 +53,7 @@ function CollapseAbleContainer({
             {...props}
             data-open={isOpen}
             data-controlled={isControlled}
+            data-collapseable-id={collapseAbleId}
         >
             {children}
         </div>
