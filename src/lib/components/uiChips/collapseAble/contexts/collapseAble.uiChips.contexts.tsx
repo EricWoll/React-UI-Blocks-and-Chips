@@ -4,7 +4,7 @@ import {
     useContext,
     useMemo,
     useCallback,
-} from 'react';
+} from "react";
 
 interface CollapseAbleContext {
     isOpen: boolean;
@@ -23,50 +23,82 @@ interface CollapseAbleProviderProps {
     defaultOpen?: boolean;
     isControlled?: boolean;
     controlledIsOpen?: boolean | undefined;
-    onOpen?: () => void; // user-initiated only
+    onOpen?: () => void;
+    onClose?: () => void;
+    onToggle?: (isOpen: boolean) => void;
     collapseAbleId?: string;
 }
 
+/**
+ * Provider component for collapsible state management.
+ * Supports both controlled and uncontrolled modes.
+ * 
+ * @param {React.ReactNode} children - Child components
+ * @param {boolean} [defaultOpen=false] - Initial open state (uncontrolled mode)
+ * @param {boolean} [isControlled=false] - Whether the component is controlled
+ * @param {boolean} [controlledIsOpen] - Open state in controlled mode
+ * @param {() => void} [onOpen] - Callback when component opens (closed -> open transition only)
+ * @param {() => void} [onClose] - Callback when component closes (open -> closed transition only)
+ * @param {(isOpen: boolean) => void} [onToggle] - Callback when toggle function is attempted (useful for controlled mode)
+ * @param {string} [collapseAbleId] - Unique identifier for the collapsible
+ */
 function CollapseAbleProvider({
     children,
     defaultOpen = false,
     isControlled = false,
     controlledIsOpen,
     onOpen,
+    onClose,
+    onToggle,
     collapseAbleId,
 }: CollapseAbleProviderProps) {
     const [uncontrolled, setUncontrolled] = useState<boolean>(defaultOpen);
-
+    
     const [id] = useState<string>(() => {
-        if (!isControlled && !collapseAbleId) {
-            if (
-                typeof window !== 'undefined' &&
-                'crypto' in window &&
-                'randomUUID' in crypto
-            ) {
-                return crypto.randomUUID();
-            }
-            return `collapse-${Math.random().toString(36).slice(2)}`;
+        if (collapseAbleId) return collapseAbleId;
+        
+        if (
+            typeof window !== "undefined" &&
+            "crypto" in window &&
+            "randomUUID" in crypto
+        ) {
+            return crypto.randomUUID();
         }
-        return collapseAbleId ?? '';
+        return `collapse-${Math.random().toString(36).slice(2)}`;
     });
 
-    const controlled = isControlled && typeof controlledIsOpen === 'boolean';
+    const controlled = isControlled && typeof controlledIsOpen === "boolean";
     const effective = controlled ? (controlledIsOpen as boolean) : uncontrolled;
 
     const toggleOpen = useCallback(() => {
-        onOpen?.();
+        const nextState = !effective;
+        onToggle?.(nextState);
+        
+        if (nextState && !effective) {
+            onOpen?.();
+        } else if (!nextState && effective) {
+            onClose?.();
+        }
 
         if (controlled) return;
-        setUncontrolled((prev) => !prev);
-    }, [controlled, onOpen]);
+        setUncontrolled(nextState);
+        
+    }, [controlled, effective, onOpen, onClose, onToggle]);
 
     const setIsOpen = useCallback(
         (next: boolean) => {
-            onOpen?.();
-            if (!controlled) setUncontrolled(next);
+            if (controlled) return;
+            
+            const wasOpen = uncontrolled;
+            setUncontrolled(next);
+        
+            if (next && !wasOpen) {
+                onOpen?.();
+            } else if (!next && wasOpen) {
+                onClose?.();
+            }
         },
-        [controlled, onOpen],
+        [controlled, uncontrolled, onOpen, onClose],
     );
 
     const value = useMemo(
@@ -86,18 +118,24 @@ function CollapseAbleProvider({
         </CollapseAbleContext.Provider>
     );
 }
+CollapseAbleProvider.displayName = "CollapseAbleProvider";
 
-CollapseAbleProvider.displayName = 'CollapseAbleProvider';
-
+/**
+ * Hook to access collapsible context.
+ * Must be used within a CollapseAbleProvider.
+ * 
+ * @throws {Error} If used outside of CollapseAbleProvider
+ * @returns {CollapseAbleContext} The collapsible context value
+ */
 function useCollapseAble() {
     const context = useContext(CollapseAbleContext);
     if (!context) {
         throw new Error(
-            'useCollapseAble must be used within a CollapseAbleProvider',
+            "useCollapseAble must be used within a CollapseAbleProvider",
         );
     }
     return context;
 }
-useCollapseAble.displayName = 'useCollapseAble';
+useCollapseAble.displayName = "useCollapseAble";
 
 export { CollapseAbleProvider, useCollapseAble };
