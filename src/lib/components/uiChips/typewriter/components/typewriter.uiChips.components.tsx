@@ -1,7 +1,7 @@
 import React from 'react';
 import useTypewriterEffect, {
     UseTypewriterOptions,
-} from '../hooks/useTypewriterEffect.uiChips.hooks';
+} from '@/lib/components/uiChips/typewriter/hooks/useTypewriterEffect.uiChips.hooks';
 
 type TypewriterInJsProps = React.HTMLAttributes<HTMLParagraphElement> &
     UseTypewriterOptions;

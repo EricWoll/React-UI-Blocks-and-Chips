@@ -1,9 +1,9 @@
 import {
     CollapseAble,
-    iCollapseAble,
-} from '@/components/uiChips/collapseAble/components/collapseAble.uiChips.components';
-import { itemsToRender } from '@/tools/uiTools/itemsToRender.uiTools';
-import isElement from '@/tools/uiTools/isElement.uiTools';
+    CollapseAbleProps,
+} from '@/lib/components/uiChips/collapseAble/components/collapseAble.uiChips.components';
+import { itemsToRender } from '@/lib/tools/uiTools/itemsToRender.uiTools';
+import isElement from '@/lib/tools/uiTools/isElement.uiTools';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 
 type AccordionMode = 'single' | 'multiple';
@@ -42,11 +42,16 @@ function Accordion({
     const [opened, setOpened] = useState<string[]>(defaultOpen);
     const effectiveOpen = isControlled ? (controlledOpen ?? []) : opened;
 
-    // Extract child IDs from CollapseAble children only
     const childIds = useMemo(() => {
         const ids: string[] = [];
         React.Children.forEach(children, (child) => {
-            if (isElement<iCollapseAble>(child, CollapseAble, 'CollapseAble')) {
+            if (
+                isElement<CollapseAbleProps>(
+                    child,
+                    CollapseAble,
+                    'CollapseAble',
+                )
+            ) {
                 const id = child.props.collapseAbleId;
                 if (id && id.length > 0) {
                     ids.push(id);
@@ -89,7 +94,6 @@ function Accordion({
             setOpened((prev) => {
                 const isOpen = prev.includes(id);
 
-                // Single mode: only one item open at a time
                 if (isSingleMode) {
                     return isOpen ? [] : [id];
                 }
@@ -111,12 +115,13 @@ function Accordion({
 
     const items = useMemo(
         () =>
-            itemsToRender<iCollapseAble>({
+            itemsToRender<CollapseAbleProps>({
                 children,
                 matchComponent: CollapseAble,
                 displayName: 'CollapseAble',
                 getInjectedProps: (child) => {
-                    const id = child.props.collapseAbleId;
+                    const id = (child as React.ReactElement<CollapseAbleProps>)
+                        .props.collapseAbleId;
                     if (!id) return {};
 
                     return {

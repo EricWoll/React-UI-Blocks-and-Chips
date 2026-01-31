@@ -1,5 +1,5 @@
 import { useMemo, HTMLAttributes, ReactNode } from 'react';
-import { itemsToRender } from '@/tools/uiTools/itemsToRender.uiTools';
+import { itemsToRender } from '@/lib/tools/uiTools/itemsToRender.uiTools';
 
 interface TabItemProps extends HTMLAttributes<HTMLDivElement> {
     isActive?: boolean;
