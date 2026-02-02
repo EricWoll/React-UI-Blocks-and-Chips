@@ -4,7 +4,7 @@ import {
     useCollapseAble,
 } from '../contexts/collapseAble.uiChips.contexts';
 
-interface iCollapseAble {
+interface CollapseAbleProps {
     collapseAbleId: string;
     defaultOpen?: boolean;
     isControlled?: boolean | undefined;
@@ -14,7 +14,7 @@ interface iCollapseAble {
     onToggle?: (isOpen: boolean) => void;
 }
 
-type CollapseAbleProps = iCollapseAble & React.HTMLAttributes<HTMLDivElement>;
+type iCollapseAble = CollapseAbleProps & React.HTMLAttributes<HTMLDivElement>;
 
 /**
  * A collapsible container component that manages expandable/collapsible content.
@@ -48,7 +48,7 @@ function CollapseAble({
     onToggle,
     collapseAbleId,
     ...props
-}: CollapseAbleProps) {
+}: iCollapseAble) {
     return (
         <CollapseAbleProvider
             isControlled={isControlled}
@@ -188,7 +188,7 @@ function CollapseAbleContent({
 CollapseAbleContent.displayName = 'CollapseAbleContent';
 
 export {
-    type CollapseAbleProps,
+    type iCollapseAble,
     CollapseAble,
     CollapseAbleHeader,
     CollapseAbleContent,

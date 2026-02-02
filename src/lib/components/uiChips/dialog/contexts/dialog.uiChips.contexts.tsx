@@ -6,20 +6,22 @@ import {
     useCallback,
 } from 'react';
 import createId from '@/lib/tools/uiTools/createId.uiTools';
+import {
+    CollapseAble,
+    CollapseAbleContent,
+} from '../../collapseAble/components/collapseAble.uiChips.components';
 
-interface CollapseAbleContext {
+interface DialogContext {
     isOpen: boolean;
     toggleOpen: () => void;
     setIsOpen: (isOpen: boolean) => void;
     isControlled?: boolean | undefined;
-    collapseAbleId?: string;
+    dialogId?: string;
 }
 
-const CollapseAbleContext = createContext<CollapseAbleContext | undefined>(
-    undefined,
-);
+const DialogContext = createContext<DialogContext | undefined>(undefined);
 
-interface CollapseAbleProviderProps {
+interface DialogContextProps {
     children: React.ReactNode;
     defaultOpen?: boolean;
     isControlled?: boolean;
@@ -27,7 +29,7 @@ interface CollapseAbleProviderProps {
     onOpen?: () => void;
     onClose?: () => void;
     onToggle?: (isOpen: boolean) => void;
-    collapseAbleId?: string;
+    dialogId?: string;
 }
 
 /**
@@ -41,9 +43,9 @@ interface CollapseAbleProviderProps {
  * @param {() => void} [onOpen] - Callback when component opens (closed -> open transition only)
  * @param {() => void} [onClose] - Callback when component closes (open -> closed transition only)
  * @param {(isOpen: boolean) => void} [onToggle] - Callback when toggle function is attempted (useful for controlled mode)
- * @param {string} [collapseAbleId] - Unique identifier for the collapsible
+ * @param {string} [dialogId] - Unique identifier for the collapsible
  */
-function CollapseAbleProvider({
+function DialogProvider({
     children,
     defaultOpen = false,
     isControlled = false,
@@ -51,11 +53,10 @@ function CollapseAbleProvider({
     onOpen,
     onClose,
     onToggle,
-    collapseAbleId,
-}: CollapseAbleProviderProps) {
+    dialogId,
+}: DialogContextProps) {
     const [uncontrolled, setUncontrolled] = useState<boolean>(defaultOpen);
-
-    const [id] = useState<string>(createId(collapseAbleId, 'collapseAble'));
+    const [id] = useState<string>(createId(dialogId, 'dialog'));
 
     const controlled = isControlled && typeof controlledIsOpen === 'boolean';
     const effective = controlled ? (controlledIsOpen as boolean) : uncontrolled;
@@ -96,18 +97,18 @@ function CollapseAbleProvider({
             toggleOpen,
             setIsOpen,
             isControlled: controlled,
-            collapseAbleId: id,
+            dialogId: id,
         }),
         [effective, controlled, id, toggleOpen, setIsOpen],
     );
 
     return (
-        <CollapseAbleContext.Provider value={value}>
+        <DialogContext.Provider value={value}>
             {children}
-        </CollapseAbleContext.Provider>
+        </DialogContext.Provider>
     );
 }
-CollapseAbleProvider.displayName = 'CollapseAbleProvider';
+DialogProvider.displayName = 'DialogProvider';
 
 /**
  * Hook to access collapsible context.
@@ -116,15 +117,13 @@ CollapseAbleProvider.displayName = 'CollapseAbleProvider';
  * @throws {Error} If used outside of CollapseAbleProvider
  * @returns {CollapseAbleContext} The collapsible context value
  */
-function useCollapseAble() {
-    const context = useContext(CollapseAbleContext);
+function useDialog() {
+    const context = useContext(DialogContext);
     if (!context) {
-        throw new Error(
-            'useCollapseAble must be used within a CollapseAbleProvider',
-        );
+        throw new Error('useDialog must be used within a DialogProvider');
     }
     return context;
 }
-useCollapseAble.displayName = 'useCollapseAble';
+useDialog.displayName = 'useDialog';
 
-export { CollapseAbleProvider, useCollapseAble };
+export { DialogProvider, useDialog };

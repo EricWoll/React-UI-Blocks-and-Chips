@@ -1,6 +1,6 @@
 import {
     CollapseAble,
-    CollapseAbleProps,
+    iCollapseAble,
 } from '@/lib/components/uiChips/collapseAble/components/collapseAble.uiChips.components';
 import { itemsToRender } from '@/lib/tools/uiTools/itemsToRender.uiTools';
 import isElement from '@/lib/tools/uiTools/isElement.uiTools';
@@ -45,13 +45,7 @@ function Accordion({
     const childIds = useMemo(() => {
         const ids: string[] = [];
         React.Children.forEach(children, (child) => {
-            if (
-                isElement<CollapseAbleProps>(
-                    child,
-                    CollapseAble,
-                    'CollapseAble',
-                )
-            ) {
+            if (isElement<iCollapseAble>(child, CollapseAble, 'CollapseAble')) {
                 const id = child.props.collapseAbleId;
                 if (id && id.length > 0) {
                     ids.push(id);
@@ -115,12 +109,12 @@ function Accordion({
 
     const items = useMemo(
         () =>
-            itemsToRender<CollapseAbleProps>({
+            itemsToRender<iCollapseAble>({
                 children,
                 matchComponent: CollapseAble,
                 displayName: 'CollapseAble',
                 getInjectedProps: (child) => {
-                    const id = (child as React.ReactElement<CollapseAbleProps>)
+                    const id = (child as React.ReactElement<iCollapseAble>)
                         .props.collapseAbleId;
                     if (!id) return {};
 
