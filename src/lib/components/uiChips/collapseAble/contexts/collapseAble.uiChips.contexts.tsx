@@ -5,6 +5,7 @@ import {
     useMemo,
     useCallback,
 } from "react";
+import createId from "@/lib/tools/uiTools/createId.uiTools";
 
 interface CollapseAbleContext {
     isOpen: boolean;
@@ -32,7 +33,7 @@ interface CollapseAbleProviderProps {
 /**
  * Provider component for collapsible state management.
  * Supports both controlled and uncontrolled modes.
- * 
+ *
  * @param {React.ReactNode} children - Child components
  * @param {boolean} [defaultOpen=false] - Initial open state (uncontrolled mode)
  * @param {boolean} [isControlled=false] - Whether the component is controlled
@@ -53,19 +54,8 @@ function CollapseAbleProvider({
     collapseAbleId,
 }: CollapseAbleProviderProps) {
     const [uncontrolled, setUncontrolled] = useState<boolean>(defaultOpen);
-    
-    const [id] = useState<string>(() => {
-        if (collapseAbleId) return collapseAbleId;
-        
-        if (
-            typeof window !== "undefined" &&
-            "crypto" in window &&
-            "randomUUID" in crypto
-        ) {
-            return crypto.randomUUID();
-        }
-        return `collapse-${Math.random().toString(36).slice(2)}`;
-    });
+
+    const [id] = useState<string>(createId(collapseAbleId, "collapseAble"));
 
     const controlled = isControlled && typeof controlledIsOpen === "boolean";
     const effective = controlled ? (controlledIsOpen as boolean) : uncontrolled;
@@ -73,7 +63,7 @@ function CollapseAbleProvider({
     const toggleOpen = useCallback(() => {
         const nextState = !effective;
         onToggle?.(nextState);
-        
+
         if (nextState && !effective) {
             onOpen?.();
         } else if (!nextState && effective) {
@@ -82,16 +72,15 @@ function CollapseAbleProvider({
 
         if (controlled) return;
         setUncontrolled(nextState);
-        
     }, [controlled, effective, onOpen, onClose, onToggle]);
 
     const setIsOpen = useCallback(
         (next: boolean) => {
             if (controlled) return;
-            
+
             const wasOpen = uncontrolled;
             setUncontrolled(next);
-        
+
             if (next && !wasOpen) {
                 onOpen?.();
             } else if (!next && wasOpen) {
@@ -123,7 +112,7 @@ CollapseAbleProvider.displayName = "CollapseAbleProvider";
 /**
  * Hook to access collapsible context.
  * Must be used within a CollapseAbleProvider.
- * 
+ *
  * @throws {Error} If used outside of CollapseAbleProvider
  * @returns {CollapseAbleContext} The collapsible context value
  */
