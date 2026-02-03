@@ -14,9 +14,8 @@ import isElement from '@/lib/tools/uiTools/isElement.uiTools';
  * @param onMatch - Optional callback when a child matches the component type
  * @param onFail - Optional callback when a child doesn't match the component type
  * @param onBefore - Optional callback before processing begins
- * @param onAfter - Optional callback after processing completes
+ * @param onAfter - Optional callback after processing completes, but before results return
  * @param filter - Optional filter to exclude certain matched elements (return false to exclude)
- * @param shouldRender - Optional render check (return false to render null instead)
  * @param transform - Optional function to transform injected props before cloning
  *
  * @example
@@ -29,7 +28,6 @@ import isElement from '@/lib/tools/uiTools/isElement.uiTools';
  *  onMatch: (child) => console.log('Found tab:', child.props.tabId),
  *  onFail: (child) => console.warn('Non-tab child detected'),
  *  filter: (child) => !child.props.disabled,
- *  shouldRender: (child) => child.props.visible !== false,
  *  transform: (child, props) => ({
  *     ...props,
  *     className: props.isActive ? 'active' : '',
@@ -59,7 +57,6 @@ export function itemsToRender<T>({
     onBefore?: (children: ReactNode) => void;
     onAfter?: (results: ReactNode) => void;
     filter?: (child: ReactElement<T>) => boolean;
-    shouldRender?: (child: ReactElement<T>) => boolean;
     transform?: (child: ReactElement<T>, props: Partial<T>) => Partial<T>;
 }) {
     onBefore?.(children);
@@ -70,7 +67,6 @@ export function itemsToRender<T>({
             return child;
         }
         if (filter && !filter(child)) return null;
-        if (shouldRender && !shouldRender(child)) return null;
 
         onMatch?.(child);
 
