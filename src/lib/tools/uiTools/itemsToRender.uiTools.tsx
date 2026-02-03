@@ -45,7 +45,6 @@ export function itemsToRender<T>({
     onBefore,
     onAfter,
     filter,
-    shouldRender,
     transform,
 }: {
     children: ReactNode;
