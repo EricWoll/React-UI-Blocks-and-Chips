@@ -30,8 +30,7 @@ import { isValidElement } from 'react';
  * @example
  * // Filter children to only TabItem components
  * const tabItems = Children.toArray(children).filter(
- *   (child): child is React.ReactElement<TabItemProps> =>
- *     isElement(child, TabItem, 'TabItem')
+ *   (child) => isElement(child, TabItem, 'TabItem')
  * );
  */
 function isElement<T>(
