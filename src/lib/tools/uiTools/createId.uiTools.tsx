@@ -7,6 +7,14 @@
  * @param {string | undefined} id - The provided ID (optional)
  * @param {string} idType - The type of component (used for fallback ID generation)
  * @returns {string} The generated or provided ID
+ *
+ * @example
+ * // With provided ID
+ * const newId = createId('custom-id', 'Button');
+ *
+ * @example
+ * // Without provided ID (generates random ID)
+ * const newId = createId(undefined, 'Button');
  */
 function createId(id: string | undefined, idType: string): string {
   if (id) return id;
