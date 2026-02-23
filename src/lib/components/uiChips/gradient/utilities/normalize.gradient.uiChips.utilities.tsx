@@ -20,12 +20,6 @@ import {
   uniqueName,
 } from "@/lib/components/uiChips/gradient/components/gradient.uiChips.components";
 
-function msOrSecToMs(v?: number): number | undefined {
-  if (v == null) return undefined;
-  return v;
-}
-msOrSecToMs.displayName = "msOrSecToMs";
-
 function normalizeAnimations(
   animations: AnimatedGradientProps["animations"],
   shapeAnim: AnimatedGradientProps["shapeAnim"],
@@ -141,27 +135,24 @@ function normalizeAnimations(
         const built = cfg as BuiltInAnimationConfig & { type?: AnimationName };
         const nm = (built.type as AnimationName) || (undefined as any);
         if (nm) addBuiltIn(nm, built);
-        else {
-          // If no explicit type, infer from key name not passed to us; assume config corresponds to built-in
-          // To be forgiving, default to 'pan' if ambiguous
-          addBuiltIn("pan", built);
-        }
       }
     });
   }
 
   // Parse shape-specific animations
-  const addShapeAnim = (sa: ShapeAnimation) => {
-    if (!sa) return;
-    if (typeof sa === "string") {
-      addBuiltIn(sa as AnimationName, { target: "shape" });
-    } else if ((sa as CustomAnimationConfig).type === "custom") {
-      const c = sa as CustomAnimationConfig;
-      addCustom({ ...c, target: c.target ?? "shape" });
+  const addShapeAnim = (sAnim: ShapeAnimation) => {
+    if (!sAnim) return;
+    if (typeof sAnim === "string") {
+      addBuiltIn(sAnim as AnimationName, { target: "shape" });
+    } else if ((sAnim as CustomAnimationConfig).type === "custom") {
+      const sConfig = sAnim as CustomAnimationConfig;
+      addCustom({ ...sConfig, target: sConfig.target ?? "shape" });
     } else {
-      const b = sa as BuiltInAnimationConfig & { type?: AnimationName };
-      const nm = (b.type as AnimationName) || "blobMorph";
-      addBuiltIn(nm, { ...b, target: b.target ?? "shape" });
+      const sBuiltIn = sAnim as BuiltInAnimationConfig & {
+        type?: AnimationName;
+      };
+      const sName = (sBuiltIn.type as AnimationName) || "blobMorph";
+      addBuiltIn(sName, { ...sBuiltIn, target: sBuiltIn.target ?? "shape" });
     }
   };
 
@@ -192,4 +183,4 @@ function toAnimationCSS(anims: ConcreteAnimation[]): {
 }
 toAnimationCSS.displayName = "toAnimationCSS";
 
-export { msOrSecToMs, normalizeAnimations, toAnimationCSS };
+export { normalizeAnimations, toAnimationCSS };
