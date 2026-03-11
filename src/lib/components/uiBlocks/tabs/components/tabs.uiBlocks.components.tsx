@@ -1,5 +1,5 @@
-import { useMemo, HTMLAttributes, ReactNode } from 'react';
-import { itemsToRender } from '@/lib/tools/uiTools/itemsToRender.uiTools';
+import { useMemo, HTMLAttributes, ReactNode, useEffect } from "react";
+import { itemsToRender } from "@/lib/tools/uiTools/itemsToRender.uiTools";
 
 interface TabItemProps extends HTMLAttributes<HTMLDivElement> {
     isActive?: boolean;
@@ -30,7 +30,7 @@ function TabItem({
     children,
     isActive,
     tabId,
-    unmountOnHide = false,
+    unmountOnHide = true,
     style,
     ...props
 }: TabItemProps) {
@@ -45,7 +45,7 @@ function TabItem({
             hidden={!isActive}
             tabIndex={isActive ? 0 : -1}
             style={{
-                display: isActive ? undefined : 'none',
+                display: isActive ? undefined : "none",
                 ...style,
             }}
             {...props}
@@ -54,7 +54,7 @@ function TabItem({
         </div>
     );
 }
-TabItem.displayName = 'TabItem';
+TabItem.displayName = "TabItem";
 
 interface TabsProps extends HTMLAttributes<HTMLDivElement> {
     currentTab: string;
@@ -88,13 +88,13 @@ interface TabsProps extends HTMLAttributes<HTMLDivElement> {
  * </Tabs>
  * ```
  */
-function Tabs({ children, currentTab, ...props }: TabsProps) {
+function Tabs({ children, currentTab, onTabChange, ...props }: TabsProps) {
     const tabItems = useMemo(
         () =>
             itemsToRender<TabItemProps>({
                 children,
                 matchComponent: TabItem,
-                displayName: 'TabItem',
+                displayName: "TabItem",
                 getInjectedProps: (child) => ({
                     isActive: child.props.tabId === currentTab,
                 }),
@@ -102,12 +102,16 @@ function Tabs({ children, currentTab, ...props }: TabsProps) {
         [children, currentTab],
     );
 
+    useEffect(() => {
+        onTabChange?.(currentTab);
+    }, [currentTab, onTabChange]);
+
     return (
         <div data-active-tab={currentTab} {...props}>
             {tabItems}
         </div>
     );
 }
-Tabs.displayName = 'Tabs';
+Tabs.displayName = "Tabs";
 
 export { TabItem, Tabs };
