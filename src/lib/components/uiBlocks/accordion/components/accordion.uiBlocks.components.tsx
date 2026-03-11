@@ -6,16 +6,14 @@ import { itemsToRender } from "@/lib/tools/uiTools/itemsToRender.uiTools";
 import isElement from "@/lib/tools/uiTools/isElement.uiTools";
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 
-type AccordionMode = "single" | "multiple";
-
 interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
     defaultOpen?: string[];
     isControlled?: boolean;
     controlledOpen?: string[];
     onUpdate?: () => void;
-    mode?: AccordionMode;
     maxOpen?: number;
     keepOneOpen?: boolean;
+    collapseDurationMs?: number;
 }
 
 /**
@@ -25,9 +23,9 @@ interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
  * Can operate in controlled or uncontrolled mode with single or multiple selection.
  *
  * @example
- * <Accordion mode="single" defaultOpen={['item-1']}>
- *   <CollapseAble collapseAbleId="item-1">Content 1</CollapseAble>
- *   <CollapseAble collapseAbleId="item-2">Content 2</CollapseAble>
+ * <Accordion defaultOpen={['item-1']}>
+ *   <CollapseAble collapseAbleId="item-1">{...content...}</CollapseAble>
+ *   <CollapseAble collapseAbleId="item-2">{...content...}</CollapseAble>
  * </Accordion>
  */
 function Accordion({
@@ -36,9 +34,9 @@ function Accordion({
     isControlled = false,
     controlledOpen,
     onUpdate,
-    mode = "single",
-    maxOpen = -1,
+    maxOpen = 0,
     keepOneOpen = false,
+    collapseDurationMs = 0,
     ...props
 }: AccordionProps) {
     const [opened, setOpened] = useState<string[]>(defaultOpen);
@@ -68,8 +66,6 @@ function Accordion({
         [maxOpen],
     );
 
-    const isSingleMode = mode === "single" || normalizedMaxOpen === 1;
-
     const defaultOpenSet = useMemo(() => new Set(defaultOpen), [defaultOpen]);
 
     // Cleanup: remove opened items that no longer exist in children
@@ -96,11 +92,6 @@ function Accordion({
             setOpened((prev) => {
                 const isOpen = prev.includes(id);
 
-                if (isSingleMode) {
-                    return isOpen ? [] : [id];
-                }
-
-                // Multiple mode
                 if (isOpen) {
                     if (keepOneOpen && prev.length === 1) return prev;
                     return prev.filter((x) => x !== id);
@@ -113,7 +104,7 @@ function Accordion({
                 return [...prev, id];
             });
         },
-        [isControlled, onUpdate, isSingleMode, normalizedMaxOpen],
+        [isControlled, onUpdate, normalizedMaxOpen],
     );
 
     const items = useMemo(
@@ -132,6 +123,7 @@ function Accordion({
                         controlledIsOpen: effectiveOpen.includes(id),
                         onClick: () => toggleOpen(id),
                         defaultOpen: defaultOpenSet.has(id),
+                        durationMs: collapseDurationMs,
                     };
                 },
             }),
