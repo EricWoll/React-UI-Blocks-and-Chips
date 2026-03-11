@@ -1,20 +1,21 @@
-import clsx from 'clsx';
+import clsx from "clsx";
 import {
-    CollapseAbleProvider,
-    useCollapseAble,
-} from '../contexts/collapseAble.uiChips.contexts';
+  CollapseAbleProvider,
+  useCollapseAble,
+} from "@/lib/components/uiChips/collapseAble/contexts/collapseAble.uiChips.contexts";
 
-interface CollapseAbleProps {
-    collapseAbleId: string;
-    defaultOpen?: boolean;
-    isControlled?: boolean | undefined;
-    controlledIsOpen?: boolean | undefined;
-    onOpen?: () => void;
-    onClose?: () => void;
-    onToggle?: (isOpen: boolean) => void;
+interface iCollapseAble {
+  collapseAbleId: string;
+  defaultOpen?: boolean;
+  isControlled?: boolean | undefined;
+  controlledIsOpen?: boolean | undefined;
+  onOpen?: () => void;
+  onClose?: () => void;
+  onToggle?: (isOpen: boolean) => void;
+  durationMs?: number;
 }
 
-type iCollapseAble = CollapseAbleProps & React.HTMLAttributes<HTMLDivElement>;
+type CollapseAbleProps = iCollapseAble & React.HTMLAttributes<HTMLDivElement>;
 
 /**
  * A collapsible container component that manages expandable/collapsible content.
@@ -39,31 +40,33 @@ type iCollapseAble = CollapseAbleProps & React.HTMLAttributes<HTMLDivElement>;
  * ```
  */
 function CollapseAble({
-    children,
-    defaultOpen,
-    isControlled,
-    controlledIsOpen,
-    onOpen,
-    onClose,
-    onToggle,
-    collapseAbleId,
-    ...props
-}: iCollapseAble) {
-    return (
-        <CollapseAbleProvider
-            isControlled={isControlled}
-            defaultOpen={defaultOpen}
-            controlledIsOpen={controlledIsOpen}
-            onOpen={onOpen}
-            onClose={onClose}
-            onToggle={onToggle}
-            collapseAbleId={collapseAbleId}
-        >
-            <CollapseAbleContainer {...props}>{children}</CollapseAbleContainer>
-        </CollapseAbleProvider>
-    );
+  children,
+  defaultOpen,
+  isControlled,
+  controlledIsOpen,
+  onOpen,
+  onClose,
+  onToggle,
+  collapseAbleId,
+  durationMs,
+  ...props
+}: CollapseAbleProps) {
+  return (
+    <CollapseAbleProvider
+      isControlled={isControlled}
+      defaultOpen={defaultOpen}
+      controlledIsOpen={controlledIsOpen}
+      onOpen={onOpen}
+      onClose={onClose}
+      onToggle={onToggle}
+      collapseAbleId={collapseAbleId}
+      durationMs={durationMs}
+    >
+      <CollapseAbleContainer {...props}>{children}</CollapseAbleContainer>
+    </CollapseAbleProvider>
+  );
 }
-CollapseAble.displayName = 'CollapseAble';
+CollapseAble.displayName = "CollapseAble";
 
 /**
  * Internal container component that wraps collapsible content.
@@ -75,28 +78,25 @@ CollapseAble.displayName = 'CollapseAble';
  * @param {React.HTMLAttributes<HTMLDivElement>} props - Additional HTML div attributes
  */
 function CollapseAbleContainer({
-    children,
-    className,
-    ...props
+  children,
+  className,
+  ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-    const { isOpen, isControlled, collapseAbleId } = useCollapseAble();
+  const { isOpen, isControlled, collapseAbleId } = useCollapseAble();
 
-    return (
-        <div
-            className={clsx(
-                'w-96 border border-gray-400 rounded-sm p-1',
-                className,
-            )}
-            {...props}
-            data-open={isOpen}
-            data-controlled={isControlled}
-            data-collapseable-id={collapseAbleId}
-        >
-            {children}
-        </div>
-    );
+  return (
+    <div
+      className={clsx("w-96 border border-gray-400 rounded-sm p-1", className)}
+      {...props}
+      data-open={isOpen}
+      data-controlled={isControlled}
+      data-collapseable-id={collapseAbleId}
+    >
+      {children}
+    </div>
+  );
 }
-CollapseAbleContainer.displayName = 'CollapseAbleContainer';
+CollapseAbleContainer.displayName = "CollapseAbleContainer";
 
 /**
  * Clickable title/header component that toggles the collapsible state.
@@ -114,29 +114,29 @@ CollapseAbleContainer.displayName = 'CollapseAbleContainer';
  * ```
  */
 function CollapseAbleHeader({
-    children,
-    className,
-    ...props
+  children,
+  className,
+  ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-    const { toggleOpen, isOpen, isControlled } = useCollapseAble();
+  const { toggleOpen, isOpen, isControlled } = useCollapseAble();
 
-    return (
-        <div
-            onClick={toggleOpen}
-            className={clsx('w-full h-fit select-none', className)}
-            data-open={isOpen}
-            data-controlled={isControlled}
-            {...props}
-        >
-            {children}
-        </div>
-    );
+  return (
+    <div
+      onClick={toggleOpen}
+      className={clsx("w-full h-fit select-none cursor-pointer", className)}
+      data-open={isOpen}
+      data-controlled={isControlled}
+      {...props}
+    >
+      {children}
+    </div>
+  );
 }
-CollapseAbleHeader.displayName = 'CollapseAbleHeader';
+CollapseAbleHeader.displayName = "CollapseAbleHeader";
 
-interface CollapseAbleContentProps extends React.HTMLAttributes<HTMLDivElement> {
-    maxHeight?: string;
-    durationMs?: number;
+interface CollapseAbleContentProps
+  extends React.HTMLAttributes<HTMLDivElement> {
+  maxHeight?: string;
 }
 
 /**
@@ -158,38 +158,37 @@ interface CollapseAbleContentProps extends React.HTMLAttributes<HTMLDivElement> 
  * ```
  */
 function CollapseAbleContent({
-    children,
-    className,
-    maxHeight = '500px',
-    durationMs = 300,
-    ...props
+  children,
+  className,
+  maxHeight = "500px",
+  ...props
 }: CollapseAbleContentProps) {
-    const { isOpen, isControlled } = useCollapseAble();
+  const { isOpen, isControlled, durationMs } = useCollapseAble();
 
-    return (
-        <div
-            className={clsx(
-                'w-full transition-all ease-in-out overflow-hidden',
-                className,
-            )}
-            style={{
-                maxHeight: isOpen ? maxHeight : '0',
-                transitionDuration: `${durationMs}ms`,
-            }}
-            data-open={isOpen}
-            data-controlled={isControlled}
-            aria-hidden={!isOpen}
-            {...props}
-        >
-            {children}
-        </div>
-    );
+  return (
+    <div
+      className={clsx(
+        "w-full transition-all ease-in-out overflow-hidden",
+        className,
+      )}
+      style={{
+        maxHeight: isOpen ? maxHeight : "0",
+        transitionDuration: `${durationMs}ms`,
+      }}
+      data-open={isOpen}
+      data-controlled={isControlled}
+      aria-hidden={!isOpen}
+      {...props}
+    >
+      {children}
+    </div>
+  );
 }
-CollapseAbleContent.displayName = 'CollapseAbleContent';
+CollapseAbleContent.displayName = "CollapseAbleContent";
 
 export {
-    type iCollapseAble,
-    CollapseAble,
-    CollapseAbleHeader,
-    CollapseAbleContent,
+  type CollapseAbleProps,
+  CollapseAble,
+  CollapseAbleHeader,
+  CollapseAbleContent,
 };
