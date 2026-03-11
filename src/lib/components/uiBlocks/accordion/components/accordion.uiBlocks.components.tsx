@@ -1,12 +1,12 @@
 import {
     CollapseAble,
-    iCollapseAble,
-} from '@/lib/components/uiChips/collapseAble/components/collapseAble.uiChips.components';
-import { itemsToRender } from '@/lib/tools/uiTools/itemsToRender.uiTools';
-import isElement from '@/lib/tools/uiTools/isElement.uiTools';
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+    CollapseAbleProps,
+} from "@/lib/components/uiChips/collapseAble/components/collapseAble.uiChips.components";
+import { itemsToRender } from "@/lib/tools/uiTools/itemsToRender.uiTools";
+import isElement from "@/lib/tools/uiTools/isElement.uiTools";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 
-type AccordionMode = 'single' | 'multiple';
+type AccordionMode = "single" | "multiple";
 
 interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
     defaultOpen?: string[];
@@ -15,6 +15,7 @@ interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
     onUpdate?: () => void;
     mode?: AccordionMode;
     maxOpen?: number;
+    keepOneOpen?: boolean;
 }
 
 /**
@@ -35,8 +36,9 @@ function Accordion({
     isControlled = false,
     controlledOpen,
     onUpdate,
-    mode = 'single',
+    mode = "single",
     maxOpen = -1,
+    keepOneOpen = false,
     ...props
 }: AccordionProps) {
     const [opened, setOpened] = useState<string[]>(defaultOpen);
@@ -45,7 +47,13 @@ function Accordion({
     const childIds = useMemo(() => {
         const ids: string[] = [];
         React.Children.forEach(children, (child) => {
-            if (isElement<iCollapseAble>(child, CollapseAble, 'CollapseAble')) {
+            if (
+                isElement<CollapseAbleProps>(
+                    child,
+                    CollapseAble,
+                    "CollapseAble",
+                )
+            ) {
                 const id = child.props.collapseAbleId;
                 if (id && id.length > 0) {
                     ids.push(id);
@@ -60,7 +68,7 @@ function Accordion({
         [maxOpen],
     );
 
-    const isSingleMode = mode === 'single' || normalizedMaxOpen === 1;
+    const isSingleMode = mode === "single" || normalizedMaxOpen === 1;
 
     const defaultOpenSet = useMemo(() => new Set(defaultOpen), [defaultOpen]);
 
@@ -94,6 +102,7 @@ function Accordion({
 
                 // Multiple mode
                 if (isOpen) {
+                    if (keepOneOpen && prev.length === 1) return prev;
                     return prev.filter((x) => x !== id);
                 }
 
@@ -109,19 +118,19 @@ function Accordion({
 
     const items = useMemo(
         () =>
-            itemsToRender<iCollapseAble>({
+            itemsToRender<CollapseAbleProps>({
                 children,
                 matchComponent: CollapseAble,
-                displayName: 'CollapseAble',
+                displayName: "CollapseAble",
                 getInjectedProps: (child) => {
-                    const id = (child as React.ReactElement<iCollapseAble>)
+                    const id = (child as React.ReactElement<CollapseAbleProps>)
                         .props.collapseAbleId;
                     if (!id) return {};
 
                     return {
                         isControlled: true,
                         controlledIsOpen: effectiveOpen.includes(id),
-                        onOpen: () => toggleOpen(id),
+                        onClick: () => toggleOpen(id),
                         defaultOpen: defaultOpenSet.has(id),
                     };
                 },
@@ -132,5 +141,5 @@ function Accordion({
     return <div {...props}>{items}</div>;
 }
 
-Accordion.displayName = 'Accordion';
+Accordion.displayName = "Accordion";
 export default Accordion;
