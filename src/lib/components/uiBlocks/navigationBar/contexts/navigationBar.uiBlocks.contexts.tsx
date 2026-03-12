@@ -34,11 +34,11 @@ function NavBarProvider({
     widthSmBreakpointPx = 768,
     widthMdBreakpointPx = 1024,
 }: NavBarProviderProps) {
-    const [isOpen, setIsOpen] = useState<boolean>(true);
+    const { width } = useWindowSize();
+
+    const [isOpen, setIsOpen] = useState<boolean>(false);
     const [mode, setMode] = useState<NavBarMode>("mobile");
     const [headerHeightPx, setHeaderHeightPx] = useState<number>(0);
-
-    const { width } = useWindowSize();
 
     const toggleOpen = useCallback(() => {
         setIsOpen((prev) => !prev);
@@ -53,18 +53,30 @@ function NavBarProvider({
         setHeaderHeightPx(newHeaderHeightPx);
     }, []);
 
-    useEffect(() => {
+    const modifyWindowMode = useCallback(() => {
         if (width === 0) return;
 
         if (width < widthSmBreakpointPx) {
             setMode("mobile");
+            setIsOpen(false);
         } else if (widthSmBreakpointPx < width && width < widthMdBreakpointPx) {
             setMode("desktop");
             setIsOpen(false);
         } else {
             setMode("desktop");
+            setIsOpen(true);
         }
+    }, [width, widthSmBreakpointPx, widthMdBreakpointPx]);
+
+    // Update mode when window size changes
+    useEffect(() => {
+        modifyWindowMode();
     }, [width]);
+
+    // Set initial mode on mount
+    useEffect(() => {
+        modifyWindowMode();
+    }, []);
 
     const value = useMemo(
         () => ({
