@@ -10,7 +10,7 @@ interface TabItemProps extends HTMLAttributes<HTMLDivElement> {
 
 /**
  * Individual tab content component that renders conditionally based on active state.
- * Must be used as a child of the Tabs component.
+ * NOTE: Must be used as a child of the Tabs component.
  *
  * @param {ReactNode} [children] - Content to display when the tab is active
  * @param {boolean} [isActive] - Whether this tab is currently active (managed by parent Tabs component)
@@ -64,11 +64,10 @@ interface TabsProps extends HTMLAttributes<HTMLDivElement> {
 
 /**
  * Tabs container that manages TabItem children and controls which tab is visible.
- * Automatically injects isActive prop to TabItem children based on currentTab.
- * Only the TabItem with a tabId matching currentTab will be rendered.
  *
  * @param {ReactNode} [children] - TabItem components to manage
  * @param {string} currentTab - The tabId of the currently active tab
+ * @param {(tabId: string) => void} [onTabChange] - Callback when the active tab changes
  * @param {HTMLAttributes<HTMLDivElement>} props - Additional HTML div attributes
  *
  * @example
