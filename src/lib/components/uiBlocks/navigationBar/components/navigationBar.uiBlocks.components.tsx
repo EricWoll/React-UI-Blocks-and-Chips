@@ -1,16 +1,37 @@
 import clsx from "clsx";
 import { useNavBar } from "../contexts/navigationBar.uiBlocks.contexts";
 import { useEffect, ButtonHTMLAttributes } from "react";
-import { Drawer } from "@/lib/components/uiChips/drawer/components/drawer.uiChips.components";
+import {
+  Drawer,
+  DrawerDirection,
+} from "@/lib/components/uiChips/drawer/components/drawer.uiChips.components";
 
 interface PageContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   headerHeightPx?: number;
 }
 
+/**
+ * Page Container component is used to wrap the page content AND NavBar component.
+ * @param {React.ReactNode} children - Content to render inside the page container
+ * @param {number} [headerHeightPx] - Height of the header in pixels
+ * @param {React.HTMLAttributes<HTMLDivElement>} props - Additional HTML div attributes
+ *
+ * @example
+ * ```tsx
+ * <PageContainer>
+ *   <NavBar>
+ *     <h1>Something</h1>
+ *   </NavBar>
+ *   <PageContent>
+ *     <p>Content</p>
+ *   </PageContent>
+ * </PageContainer>
+ * ```
+ */
 function PageContainer({
-  className,
   headerHeightPx = 0,
+  className,
   children,
   ...props
 }: PageContainerProps) {
@@ -35,21 +56,38 @@ function PageContainer({
 }
 PageContainer.displayName = "PageContainer";
 
-interface NavBarProps extends React.HTMLAttributes<HTMLDivElement> {
+interface NavBarProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "className"> {
   children: React.ReactNode;
   durationMs?: number;
   zIndexBase?: number;
   navBarWidthLg?: string;
   navBarWidthSm?: string;
+  openDirection?: DrawerDirection;
+  drawerClassName?: string;
+  barClassName?: string;
 }
 
+/**
+ * Navigation Bar component is used to render the navigation bar.
+ * @param {React.ReactNode} children - Content to render inside the navigation bar
+ * @param {number} [durationMs] - Duration of the animation in milliseconds
+ * @param {number} [zIndexBase] - Base z-index for the navigation bar
+ * @param {string} [navBarWidthLg] - Width of the navigation bar when open
+ * @param {string} [navBarWidthSm] - Width of the navigation bar when closed
+ * @param {DrawerDirection} [openDirection] - Direction the drawer opens from
+ * @param {string} [drawerClassName] - Classname for the drawer
+ * @param {string} [barClassName] - Classname for the navigation bar
+ */
 function NavBar({
   children,
   durationMs = 300,
   zIndexBase = 50,
   navBarWidthLg = "w-72",
   navBarWidthSm = "w-14",
-  className,
+  openDirection,
+  barClassName,
+  drawerClassName,
   style,
   ...props
 }: NavBarProps) {
@@ -63,6 +101,8 @@ function NavBar({
           toggleOpen={toggleOpen}
           zIndexBase={zIndexBase}
           durationMs={durationMs}
+          direction={openDirection}
+          drawerProps={{ className: drawerClassName }}
         >
           {children}
         </Drawer>
@@ -77,7 +117,7 @@ function NavBar({
         "bg-gray-100",
         "overflow-y-auto overflow-x-hidden",
         isOpen ? navBarWidthLg : navBarWidthSm,
-        className,
+        barClassName,
       )}
       style={{
         top: `${headerHeightPx}px`,
@@ -92,6 +132,11 @@ function NavBar({
 }
 NavBar.displayName = "NavBar";
 
+/**
+ * Page Content component is used to render the page content.
+ * @param {React.ReactNode} children - Content to render inside the page content
+ * @param {React.HTMLAttributes<HTMLDivElement>} props - Additional HTML div attributes
+ */
 function PageContent({
   className,
   children,
@@ -109,6 +154,11 @@ interface NavToggleProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
 }
 
+/**
+ * Nav Toggle component is used to toggle the navigation bar.
+ * @param {React.ReactNode} children - Content to render inside the button
+ * @param {React.ButtonHTMLAttributes<HTMLButtonElement>} props - Additional HTML button attributes
+ */
 function NavToggle({ onClick, children, ...props }: NavToggleProps) {
   const { toggleOpen } = useNavBar();
 
