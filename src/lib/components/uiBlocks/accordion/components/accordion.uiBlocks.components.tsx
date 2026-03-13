@@ -18,10 +18,16 @@ interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
 
 /**
  * Accordion component that manages CollapseAble children.
- *
- * Uses collapseAbleId prop to track which items are open.
- * Can operate in controlled or uncontrolled mode with single or multiple selection.
- *
+ * 
+ * @param {React.ReactNode} children - CollapseAble components to be managed by the Accordion
+ * @param {string[]} [defaultOpen] - IDs of CollapseAble items to open by default
+ * @param {boolean} [isControlled] - Whether the Accordion is controlled externally
+ * @param {string[]} [controlledOpen] - IDs of CollapseAble items to open when controlled
+ * @param {() => void} [onUpdate] - Callback when the open state changes
+ * @param {number} [maxOpen] - Maximum number of CollapseAble items that can be open at once
+ * @param {boolean} [keepOneOpen] - Whether to keep at least one CollapseAble item open
+ * @param {number} [collapseDurationMs] - Duration of the collapse animation in milliseconds
+ * @param {React.HTMLAttributes<HTMLDivElement>} [props] - Additional HTML div attributes
  * @example
  * <Accordion defaultOpen={['item-1']}>
  *   <CollapseAble collapseAbleId="item-1">{...content...}</CollapseAble>
