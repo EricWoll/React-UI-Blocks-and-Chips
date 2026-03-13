@@ -1,26 +1,35 @@
-import React from 'react';
+import React from "react";
 import useTypewriterEffect, {
     UseTypewriterOptions,
-} from '@/lib/components/uiChips/typewriter/hooks/useTypewriterEffect.uiChips.hooks';
+} from "@/lib/components/uiChips/typewriter/hooks/useTypewriterEffect.uiChips.hooks";
 
-type TypewriterInJsProps = React.HTMLAttributes<HTMLParagraphElement> &
+type TypewriterProps = React.HTMLAttributes<HTMLParagraphElement> &
     UseTypewriterOptions;
 
 /**
  * Typewriter text animation component.
  *
- * Renders text with a typewriter effect, supporting forward typing,
- * reverse typing (deletion), looping, and pausing.
+ * @param {string} text - The text to animate
+ * @param {number} [startDelay=0] - Initial delay before animation starts
+ * @param {number} [minDelayMs=50] - Minimum delay between characters
+ * @param {number} [maxDelayMs=150] - Maximum delay between characters
+ * @param {number} [completionPause=1000] - Pause after completing the animation
+ * @param {boolean} [isReversing=false] - Whether to reverse the animation
+ * @param {boolean} [loop=false] - Whether to loop the animation
+ * @param {boolean} [isPaused=false] - Whether the animation is paused
+ * @param {React.HTMLAttributes<HTMLParagraphElement>} props - Additional HTML paragraph attributes
  *
  * @example
- * <TypewriterInJs
+ * ```tsx
+ * <Typewriter
  *   text="Hello, World!"
  *   loop={true}
- *   minDelay={50}
- *   maxDelay={150}
+ *   minDelayMs={50}
+ *   maxDelayMs={150}
  * />
+ * ```
  */
-function TypewriterEffect({
+function Typewriter({
     text,
     startDelay,
     minDelayMs,
@@ -30,7 +39,7 @@ function TypewriterEffect({
     loop,
     isPaused,
     ...props
-}: TypewriterInJsProps) {
+}: TypewriterProps) {
     const typewriter = useTypewriterEffect({
         text,
         startDelay,
@@ -55,5 +64,5 @@ function TypewriterEffect({
     );
 }
 
-TypewriterEffect.displayName = 'TypewriterEffect';
-export default TypewriterEffect;
+    Typewriter.displayName = "Typewriter";
+export default Typewriter;
