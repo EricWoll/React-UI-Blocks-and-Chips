@@ -1,20 +1,29 @@
-import clsx from 'clsx';
-import { useNavBar } from './navigationBar.contexts';
-import { useEffect, ButtonHTMLAttributes } from 'react';
+import clsx from "clsx";
+import { useNavBar } from "@/lib/components/navigationBar/navigationBar.contexts";
 import {
-    Drawer,
-    DrawerDirection,
-} from '@/lib/components/drawer/drawer.components';
+  ButtonHTMLAttributes,
+  HTMLAttributes,
+  useCallback,
+  forwardRef,
+  useId,
+  useEffect,
+} from "react";
+import {
+  Drawer,
+  DrawerOptions,
+} from "@/lib/components/drawer/drawer.components";
 
-interface PageContainerProps extends React.HTMLAttributes<HTMLDivElement> {
-    children: React.ReactNode;
-    headerHeightPx?: number;
+interface Path {
+  pathname: string;
+  search: string;
+  hash: string;
 }
+
+export type To = string | Partial<Path>;
 
 /**
  * Page Container component is used to wrap the page content AND NavBar component.
  * @param {React.ReactNode} children - Content to render inside the page container
- * @param {number} [headerHeightPx] - Height of the header in pixels
  * @param {React.HTMLAttributes<HTMLDivElement>} props - Additional HTML div attributes
  *
  * @example
@@ -30,109 +39,108 @@ interface PageContainerProps extends React.HTMLAttributes<HTMLDivElement> {
  * ```
  */
 function PageContainer({
-    headerHeightPx = 0,
-    className,
-    children,
-    ...props
-}: PageContainerProps) {
-    const { updateHeaderHeightPx } = useNavBar();
-
-    useEffect(() => {
-        updateHeaderHeightPx(headerHeightPx);
-    }, [headerHeightPx]);
-
-    return (
-        <div
-            className={clsx(
-                `w-full min-h-[calc(100vh - ${headerHeightPx})]`,
-                'flex flex-row flex-nowrap',
-                className,
-            )}
-            {...props}
-        >
-            {children}
-        </div>
-    );
+  className,
+  children,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div {...props} className={clsx("w-full flex flex-row", className)}>
+      {children}
+    </div>
+  );
 }
-PageContainer.displayName = 'PageContainer';
+PageContainer.displayName = "PageContainer";
 
-interface NavBarProps extends Omit<
-    React.HTMLAttributes<HTMLDivElement>,
-    'className'
-> {
-    children: React.ReactNode;
-    durationMs?: number;
-    zIndexBase?: number;
-    navBarWidthLg?: string;
-    navBarWidthSm?: string;
-    openDirection?: DrawerDirection;
-    drawerClassName?: string;
-    barClassName?: string;
+interface NavBarProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "className"> {
+  children: React.ReactNode;
+  navBarWidths?: NavBarWidth;
+  drawerClassName?: string;
+  barClassName?: string;
+  drawerOptions?: DrawerOptions;
+  drawerStyle?: React.CSSProperties;
+  innerClassName?: string;
+  floating?: boolean;
 }
+
+type NavBarWidth = {
+  lg: string;
+  sm: string;
+};
+
+const defaultNavBarWidths: NavBarWidth = {
+  lg: "12em",
+  sm: "3.75em",
+};
 
 /**
  * Navigation Bar component is used to render the navigation bar.
  * @param {React.ReactNode} children - Content to render inside the navigation bar
- * @param {number} [durationMs] - Duration of the animation in milliseconds
- * @param {number} [zIndexBase] - Base z-index for the navigation bar
  * @param {string} [navBarWidthLg] - Width of the navigation bar when open
  * @param {string} [navBarWidthSm] - Width of the navigation bar when closed
- * @param {DrawerDirection} [openDirection] - Direction the drawer opens from
  * @param {string} [drawerClassName] - Classname for the drawer
  * @param {string} [barClassName] - Classname for the navigation bar
+ * @param {DrawerOptions} [drawerOptions] - Options for the drawer
+ * @param {React.CSSProperties} [drawerStyle] - Style for the drawer
+ * @param {string} [innerClassName] - Classname for the inner div
+ * @param {boolean} [floating] - Whether the navigation bar is floating
+ * @param {React.HTMLAttributes<HTMLDivElement>} props - Additional HTML div attributes
  */
 function NavBar({
-    children,
-    durationMs = 300,
-    zIndexBase = 50,
-    navBarWidthLg = 'w-72',
-    navBarWidthSm = 'w-14',
-    openDirection,
-    barClassName,
-    drawerClassName,
-    style,
-    ...props
+  children,
+  drawerOptions,
+  drawerClassName,
+  drawerStyle,
+  navBarWidths = defaultNavBarWidths,
+  style,
+  barClassName,
+  innerClassName,
+  floating = false,
+  ...props
 }: NavBarProps) {
-    const { mode, isOpen, toggleOpen, headerHeightPx } = useNavBar();
+  const { mode, isOpen, toggleOpen, headerHeightPx } = useNavBar();
 
-    if (mode === 'mobile') {
-        return (
-            <>
-                <Drawer
-                    isOpen={isOpen}
-                    toggleOpen={toggleOpen}
-                    zIndexBase={zIndexBase}
-                    durationMs={durationMs}
-                    direction={openDirection}
-                    drawerProps={{ className: drawerClassName }}
-                >
-                    {children}
-                </Drawer>
-            </>
-        );
-    }
+  const topOffset = floating ? 0 : headerHeightPx;
 
+  if (mode === "mobile") {
     return (
-        <div
-            className={clsx(
-                `sticky`,
-                'bg-gray-100',
-                'overflow-y-auto overflow-x-hidden',
-                isOpen ? navBarWidthLg : navBarWidthSm,
-                barClassName,
-            )}
-            style={{
-                top: `${headerHeightPx}px`,
-                height: `calc(100vh - ${headerHeightPx}px)`,
-                ...style,
-            }}
-            {...props}
+      <>
+        <Drawer
+          isOpen={isOpen}
+          toggleOpen={toggleOpen}
+          options={drawerOptions}
+          drawerProps={{ className: drawerClassName, style: drawerStyle }}
         >
-            {children}
-        </div>
+          {children}
+        </Drawer>
+      </>
     );
+  }
+
+  return (
+    <div
+      className={clsx(
+        floating ? "fixed" : `sticky`,
+        "flex-none",
+        "bg-gray-100",
+        "overflow-y-auto overflow-x-hidden",
+        barClassName,
+      )}
+      style={{
+        top: `${topOffset}px`,
+        height: floating ? "auto" : `calc(100vh - ${headerHeightPx}px)`,
+        width: isOpen ? navBarWidths.lg : navBarWidths.sm,
+        ...style,
+      }}
+      {...props}
+    >
+      <div className={clsx("flex flex-col gap-2 p-3", innerClassName)}>
+        {children}
+      </div>
+    </div>
+  );
 }
-NavBar.displayName = 'NavBar';
+NavBar.displayName = "NavBar";
 
 /**
  * Page Content component is used to render the page content.
@@ -140,41 +148,141 @@ NavBar.displayName = 'NavBar';
  * @param {React.HTMLAttributes<HTMLDivElement>} props - Additional HTML div attributes
  */
 function PageContent({
-    className,
-    children,
-    ...props
+  className,
+  children,
+  ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-    return (
-        <div className={clsx('w-full', className)} {...props}>
-            {children}
-        </div>
-    );
+  return (
+    <div {...props} className={clsx("w-full", className)}>
+      {children}
+    </div>
+  );
 }
-PageContent.displayName = 'PageContent';
+PageContent.displayName = "PageContent";
 
-interface NavToggleProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-    children: React.ReactNode;
+interface NavBarHeaderProps extends HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+  modeRendered?: "mobile" | "desktop" | "both";
 }
 
 /**
- * Nav Toggle component is used to toggle the navigation bar.
- * @param {React.ReactNode} children - Content to render inside the button
+ * Nav Header component is used to render the header of the navigation bar.
+ * @param {React.HTMLAttributes<HTMLDivElement>} props - Additional HTML div attributes
+ */
+function NavBarHeader({
+  modeRendered = "both",
+  children,
+  ...props
+}: NavBarHeaderProps) {
+  const { mode, isOpen } = useNavBar();
+  if (modeRendered !== "both" && mode !== modeRendered) return null;
+
+  return (
+    <div {...props} data-view-mode={mode} data-open={isOpen}>
+      {children}
+    </div>
+  );
+}
+NavBarHeader.displayName = "NavBarHeader";
+
+interface NavButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  children: React.ReactNode;
+  trigger?: "open" | "close" | "toggle";
+}
+
+/**
+ * Nav Button component is used to render the button for the navigation bar.
+ * @param {string} variant - Variant of the button (open, close, toggle)
  * @param {React.ButtonHTMLAttributes<HTMLButtonElement>} props - Additional HTML button attributes
  */
-function NavToggle({ onClick, children, ...props }: NavToggleProps) {
-    const { toggleOpen } = useNavBar();
+function NavButton({
+  trigger = "toggle",
+  className,
+  onClick,
+  children,
+  ...props
+}: NavButtonProps) {
+  const { toggleOpen, setIsOpen, mode, isOpen } = useNavBar();
 
-    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      onClick?.(e);
+      switch (trigger) {
+        case "toggle":
+          toggleOpen();
+          break;
+        case "close":
+          setIsOpen(false);
+          break;
+        case "open":
+          setIsOpen(true);
+          break;
+      }
+    },
+    [trigger, isOpen, onClick],
+  );
+
+  return (
+    <button
+      {...props}
+      onClick={handleClick}
+      className={clsx("cursor-pointer select-none", className)}
+      data-variant={trigger}
+      data-view-mode={mode}
+      data-open={isOpen}
+    >
+      {children}
+    </button>
+  );
+}
+NavButton.displayName = "NavButton";
+
+interface NavItemProps extends HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+  navId: string;
+  to: To;
+}
+
+const NavItem = forwardRef<HTMLDivElement, NavItemProps>(
+  ({ children, onClick, to, navId, ...props }, ref) => {
+    const { setIsOpen, isOpen, mode, activeNavItemId, registerNavItem } =
+      useNavBar();
+    const id = useId();
+
+    const handleClick = useCallback(
+      (e: React.MouseEvent<HTMLDivElement>) => {
         onClick?.(e);
-        toggleOpen();
-    };
+        if (mode === "mobile") setIsOpen(false);
+      },
+      [mode, onClick],
+    );
+
+    useEffect(() => {
+      const href =
+        typeof to === "string"
+          ? to
+          : `${to.pathname ?? ""}${to.search ?? ""}${to.hash ?? ""}`;
+
+      const unregister = registerNavItem({
+        id: navId,
+        href: href,
+      });
+      return () => unregister();
+    }, [navId, to, registerNavItem]);
 
     return (
-        <button {...props} onClick={handleClick}>
-            {children}
-        </button>
+      <div
+        {...props}
+        onClick={handleClick}
+        ref={ref}
+        data-active={activeNavItemId === id}
+        data-open={isOpen}
+        data-view-mode={mode}
+      >
+        {children}
+      </div>
     );
-}
-NavToggle.displayName = 'NavToggle';
+  },
+);
 
-export { PageContainer, NavBar, PageContent, NavToggle };
+export { PageContainer, NavBar, PageContent, NavBarHeader, NavButton, NavItem };
