@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { useNavBar } from "@/lib/components/navigationBar/navigationBar.contexts";
-import {
+import React, {
   ButtonHTMLAttributes,
   HTMLAttributes,
   useCallback,
@@ -285,4 +285,11 @@ const NavItem = forwardRef<HTMLDivElement, NavItemProps>(
   },
 );
 
-export { PageContainer, NavBar, PageContent, NavBarHeader, NavButton, NavItem };
+export {
+  PageContainer,
+  NavBar,
+  PageContent,
+  NavBarHeader,
+  NavButton,
+  NavItem,
+};
