@@ -4,12 +4,10 @@ import {
     useContext,
     useMemo,
     useCallback,
-} from 'react';
-import createId from '@/lib/tools/uiTools/createId.uiTools';
-import {
-    CollapseAble,
-    CollapseAbleContent,
-} from '../collapseAble/collapseAble.uiChips.components';
+    useRef,
+    useEffect,
+} from "react";
+import createId from "@/lib/tools/createId.tools";
 
 interface DialogContext {
     isOpen: boolean;
@@ -17,6 +15,7 @@ interface DialogContext {
     setIsOpen: (isOpen: boolean) => void;
     isControlled?: boolean | undefined;
     dialogId?: string;
+    isDisabled?: boolean;
 }
 
 const DialogContext = createContext<DialogContext | undefined>(undefined);
@@ -24,12 +23,12 @@ const DialogContext = createContext<DialogContext | undefined>(undefined);
 interface DialogContextProps {
     children: React.ReactNode;
     defaultOpen?: boolean;
-    isControlled?: boolean;
-    controlledIsOpen?: boolean | undefined;
+    isOpen?: boolean;
     onOpen?: () => void;
     onClose?: () => void;
     onToggle?: (isOpen: boolean) => void;
     dialogId?: string;
+    isDisabled?: boolean;
 }
 
 /**
@@ -48,58 +47,60 @@ interface DialogContextProps {
 function DialogProvider({
     children,
     defaultOpen = false,
-    isControlled = false,
-    controlledIsOpen,
+    isOpen,
     onOpen,
     onClose,
     onToggle,
     dialogId,
+    isDisabled,
 }: DialogContextProps) {
     const [uncontrolled, setUncontrolled] = useState<boolean>(defaultOpen);
-    const [id] = useState<string>(createId(dialogId, 'dialog'));
 
-    const controlled = isControlled && typeof controlledIsOpen === 'boolean';
-    const effective = controlled ? (controlledIsOpen as boolean) : uncontrolled;
+    const isControlled = isOpen !== undefined;
+    const open = isControlled ? isOpen : uncontrolled;
+
+    const prevOpenRef = useRef(open);
+    const dialogIdRef = useRef<string>(createId(dialogId, "dialog"));
+
+    useEffect(() => {
+        if (isDisabled) return;
+
+        if (open !== prevOpenRef.current) {
+            open ? onOpen?.() : onClose?.();
+            prevOpenRef.current = open;
+        }
+    }, [open, onOpen, onClose, isDisabled]);
 
     const toggleOpen = useCallback(() => {
-        const nextState = !effective;
-        onToggle?.(nextState);
+        if (isDisabled) return;
 
-        if (nextState && !effective) {
-            onOpen?.();
-        } else if (!nextState && effective) {
-            onClose?.();
+        const next = !open;
+        onToggle?.(next);
+
+        if (!isControlled) {
+            setUncontrolled(next);
         }
-
-        if (controlled) return;
-        setUncontrolled(nextState);
-    }, [controlled, effective, onOpen, onClose, onToggle]);
+    }, [open, isControlled, onToggle, isDisabled]);
 
     const setIsOpen = useCallback(
-        (next: boolean) => {
-            const nextState = !effective;
+        (isOpen: boolean) => {
+            if (isDisabled) return;
 
-            if (next && !nextState) {
-                onOpen?.();
-            } else if (!next && nextState) {
-                onClose?.();
-            }
-
-            if (controlled) return;
-            setUncontrolled(next);
+            setUncontrolled(isOpen);
         },
-        [controlled, uncontrolled, onOpen, onClose],
+        [isControlled, isDisabled],
     );
 
     const value = useMemo(
         () => ({
-            isOpen: effective,
+            isOpen: open,
             toggleOpen,
-            setIsOpen,
-            isControlled: controlled,
-            dialogId: id,
+            setIsOpen: isControlled ? () => {} : setIsOpen,
+            isControlled,
+            dialogId: dialogIdRef.current,
+            isDisabled,
         }),
-        [effective, controlled, id, toggleOpen, setIsOpen],
+        [open, toggleOpen, isControlled, isDisabled],
     );
 
     return (
@@ -108,7 +109,7 @@ function DialogProvider({
         </DialogContext.Provider>
     );
 }
-DialogProvider.displayName = 'DialogProvider';
+DialogProvider.displayName = "DialogProvider";
 
 /**
  * Hook to access collapsible context.
@@ -120,10 +121,10 @@ DialogProvider.displayName = 'DialogProvider';
 function useDialog() {
     const context = useContext(DialogContext);
     if (!context) {
-        throw new Error('useDialog must be used within a DialogProvider');
+        throw new Error("useDialog must be used within a DialogProvider");
     }
     return context;
 }
-useDialog.displayName = 'useDialog';
+useDialog.displayName = "useDialog";
 
 export { DialogProvider, useDialog };
