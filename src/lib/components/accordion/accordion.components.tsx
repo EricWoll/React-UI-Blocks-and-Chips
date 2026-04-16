@@ -1,20 +1,31 @@
 import {
     CollapseAble,
     CollapseAbleProps,
-} from '@/lib/components/collapseAble/collapseAble.uiChips.components';
-import { itemsToRender } from '@/lib/tools/react/itemsToRender.tools.react';
-import isElement from '@/lib/tools/react/isElement.tools.react';
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+} from "@/lib/components/collapseAble/collapseAble.components";
+import { itemsToRender } from "@/lib/tools/react/itemsToRender.tools.react";
+import isElement from "@/lib/tools/react/isElement.tools.react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { composeEventHandlers } from "@/lib/tools/react/composeEventHandler.tools.react";
 
-interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
+type AccordionProps = React.HTMLAttributes<HTMLDivElement> & {
     defaultOpen?: string[];
     isControlled?: boolean;
     controlledOpen?: string[];
     onUpdate?: () => void;
+    options?: AccordionOptions;
+};
+
+type AccordionOptions = {
     maxOpen?: number;
     keepOneOpen?: boolean;
     collapseDurationMs?: number;
-}
+};
+
+const defaultAccordionOptions: AccordionOptions = {
+    maxOpen: 0,
+    keepOneOpen: false,
+    collapseDurationMs: 0,
+};
 
 /**
  * Accordion component that manages CollapseAble children.
@@ -24,9 +35,7 @@ interface AccordionProps extends React.HTMLAttributes<HTMLDivElement> {
  * @param {boolean} [isControlled] - Whether the Accordion is controlled externally
  * @param {string[]} [controlledOpen] - IDs of CollapseAble items to open when controlled
  * @param {() => void} [onUpdate] - Callback when the open state changes
- * @param {number} [maxOpen] - Maximum number of CollapseAble items that can be open at once
- * @param {boolean} [keepOneOpen] - Whether to keep at least one CollapseAble item open
- * @param {number} [collapseDurationMs] - Duration of the collapse animation in milliseconds
+ * @param {AccordionOptions} [options] - Configuration options for the Accordion
  * @param {React.HTMLAttributes<HTMLDivElement>} [props] - Additional HTML div attributes
  * @example
  * <Accordion defaultOpen={['item-1']}>
@@ -40,13 +49,13 @@ function Accordion({
     isControlled = false,
     controlledOpen,
     onUpdate,
-    maxOpen = 0,
-    keepOneOpen = false,
-    collapseDurationMs = 0,
+    options = defaultAccordionOptions,
     ...props
 }: AccordionProps) {
     const [opened, setOpened] = useState<string[]>(defaultOpen);
     const effectiveOpen = isControlled ? (controlledOpen ?? []) : opened;
+
+    const { maxOpen, keepOneOpen, collapseDurationMs } = options;
 
     const childIds = useMemo(() => {
         const ids: string[] = [];
@@ -55,7 +64,7 @@ function Accordion({
                 isElement<CollapseAbleProps>(
                     child,
                     CollapseAble,
-                    'CollapseAble',
+                    "CollapseAble",
                 )
             ) {
                 const id = child.props.collapseAbleId;
@@ -68,7 +77,7 @@ function Accordion({
     }, [children]);
 
     const normalizedMaxOpen = useMemo(
-        () => (maxOpen > 0 ? maxOpen : Number.POSITIVE_INFINITY),
+        () => (maxOpen! > 0 ? maxOpen : Number.POSITIVE_INFINITY),
         [maxOpen],
     );
 
@@ -85,8 +94,8 @@ function Accordion({
         if (isControlled || normalizedMaxOpen === Number.POSITIVE_INFINITY)
             return;
         setOpened((prev) => {
-            if (prev.length <= normalizedMaxOpen) return prev;
-            return prev.slice(-normalizedMaxOpen);
+            if (prev.length <= normalizedMaxOpen!) return prev;
+            return prev.slice(-normalizedMaxOpen!);
         });
     }, [normalizedMaxOpen, isControlled]);
 
@@ -103,7 +112,7 @@ function Accordion({
                     return prev.filter((x) => x !== id);
                 }
 
-                if (prev.length >= normalizedMaxOpen) {
+                if (prev.length >= normalizedMaxOpen!) {
                     return [...prev.slice(1), id];
                 }
 
@@ -118,18 +127,19 @@ function Accordion({
             itemsToRender<CollapseAbleProps>({
                 children,
                 matchComponent: CollapseAble,
-                displayName: 'CollapseAble',
+                displayName: "CollapseAble",
                 getInjectedProps: (child) => {
                     const id = (child as React.ReactElement<CollapseAbleProps>)
                         .props.collapseAbleId;
                     if (!id) return {};
 
                     return {
-                        isControlled: true,
-                        controlledIsOpen: effectiveOpen.includes(id),
-                        onClick: () => toggleOpen(id),
-                        defaultOpen: defaultOpenSet.has(id),
-                        durationMs: collapseDurationMs,
+                        isOpen: effectiveOpen.includes(id),
+                        onClick: composeEventHandlers(child.props.onClick, () =>
+                            toggleOpen(id),
+                        ),
+                        durationMs:
+                            collapseDurationMs ?? child.props.durationMs,
                     };
                 },
             }),
@@ -139,5 +149,5 @@ function Accordion({
     return <div {...props}>{items}</div>;
 }
 
-Accordion.displayName = 'Accordion';
-export default Accordion;
+Accordion.displayName = "Accordion";
+export { type AccordionProps, Accordion };
