@@ -4,8 +4,10 @@ import {
     useContext,
     useMemo,
     useCallback,
-} from 'react';
-import createId from '@/lib/tools/createId.tools';
+    useRef,
+    useEffect,
+} from "react";
+import createId from "@/lib/tools/createId.tools";
 
 interface CollapseAbleContext {
     isOpen: boolean;
@@ -23,8 +25,7 @@ const CollapseAbleContext = createContext<CollapseAbleContext | undefined>(
 interface CollapseAbleProviderProps {
     children: React.ReactNode;
     defaultOpen?: boolean;
-    isControlled?: boolean;
-    controlledIsOpen?: boolean | undefined;
+    isOpen?: boolean | undefined;
     onOpen?: () => void;
     onClose?: () => void;
     onToggle?: (isOpen: boolean) => void;
@@ -39,7 +40,7 @@ interface CollapseAbleProviderProps {
  * @param {React.ReactNode} children - Child components
  * @param {boolean} [defaultOpen=false] - Initial open state (uncontrolled mode)
  * @param {boolean} [isControlled=false] - Whether the component is controlled
- * @param {boolean} [controlledIsOpen] - Open state in controlled mode
+ * @param {boolean} [isOpen] - Open state in controlled mode
  * @param {() => void} [onOpen] - Callback when component opens (closed -> open transition only)
  * @param {() => void} [onClose] - Callback when component closes (open -> closed transition only)
  * @param {(isOpen: boolean) => void} [onToggle] - Callback when toggle function is attempted (useful for controlled mode)
@@ -48,8 +49,7 @@ interface CollapseAbleProviderProps {
 function CollapseAbleProvider({
     children,
     defaultOpen = false,
-    isControlled = false,
-    controlledIsOpen,
+    isOpen,
     onOpen,
     onClose,
     onToggle,
@@ -58,51 +58,41 @@ function CollapseAbleProvider({
 }: CollapseAbleProviderProps) {
     const [uncontrolled, setUncontrolled] = useState<boolean>(defaultOpen);
 
-    const [id] = useState<string>(createId(collapseAbleId, 'collapseAble'));
+    const isControlled = isOpen !== undefined;
+    const open = isControlled ? isOpen : uncontrolled;
 
-    const controlled = isControlled && typeof controlledIsOpen === 'boolean';
-    const effective = controlled ? (controlledIsOpen as boolean) : uncontrolled;
+    const prevOpenRef = useRef(open);
+
+    const collapseAbleIdRef = useRef<string>(
+        createId(collapseAbleId, "collapseAble"),
+    );
+
+    useEffect(() => {
+        if (open !== prevOpenRef.current) {
+            open ? onOpen?.() : onClose?.();
+            prevOpenRef.current = open;
+        }
+    }, [open, onOpen, onClose]);
 
     const toggleOpen = useCallback(() => {
-        const nextState = !effective;
-        onToggle?.(nextState);
+        const next = !open;
+        onToggle?.(next);
 
-        if (nextState && !effective) {
-            onOpen?.();
-        } else if (!nextState && effective) {
-            onClose?.();
-        }
-
-        if (controlled) return;
-        setUncontrolled(nextState);
-    }, [controlled, effective, onOpen, onClose, onToggle]);
-
-    const setIsOpen = useCallback(
-        (next: boolean) => {
-            if (controlled) return;
-
-            const wasOpen = uncontrolled;
+        if (!isControlled) {
             setUncontrolled(next);
-
-            if (next && !wasOpen) {
-                onOpen?.();
-            } else if (!next && wasOpen) {
-                onClose?.();
-            }
-        },
-        [controlled, uncontrolled, onOpen, onClose],
-    );
+        }
+    }, [open, isControlled, onToggle]);
 
     const value = useMemo(
         () => ({
-            isOpen: effective,
+            isOpen: open,
             toggleOpen,
-            setIsOpen,
-            isControlled: controlled,
-            collapseAbleId: id,
+            setIsOpen: isControlled ? () => {} : setUncontrolled,
+            isControlled,
+            collapseAbleId: collapseAbleIdRef.current,
             durationMs,
         }),
-        [effective, controlled, id, toggleOpen, setIsOpen],
+        [open, toggleOpen, isControlled, durationMs],
     );
 
     return (
@@ -111,24 +101,23 @@ function CollapseAbleProvider({
         </CollapseAbleContext.Provider>
     );
 }
-CollapseAbleProvider.displayName = 'CollapseAbleProvider';
+CollapseAbleProvider.displayName = "CollapseAbleProvider";
 
 /**
  * Hook to access collapsible context.
  * Must be used within a CollapseAbleProvider.
  *
  * @throws {Error} If used outside of CollapseAbleProvider
- * @returns {CollapseAbleContext} The collapsible context value
  */
-function useCollapseAble() {
+function useCollapseAble(): CollapseAbleContext {
     const context = useContext(CollapseAbleContext);
     if (!context) {
         throw new Error(
-            'useCollapseAble must be used within a CollapseAbleProvider',
+            "useCollapseAble must be used within a CollapseAbleProvider",
         );
     }
     return context;
 }
-useCollapseAble.displayName = 'useCollapseAble';
+useCollapseAble.displayName = "useCollapseAble";
 
 export { CollapseAbleProvider, useCollapseAble };
