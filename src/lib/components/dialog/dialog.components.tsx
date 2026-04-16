@@ -1,16 +1,19 @@
-import clsx from 'clsx';
-import { DialogProvider, useDialog } from './dialog.contexts';
-import { useCallback } from 'react';
+import clsx from "clsx";
+import { DialogProvider, useDialog } from "./dialog.contexts";
+import { useCallback } from "react";
+import { Portal } from "@/lib/components/portal/portal.components";
+import { useBodyScrollLock } from "@/lib/hooks/useBodyScrollLock.hooks";
+import { useKeyboardScoped } from "@/lib/hooks/useKeyboardScoped.hooks";
 
 interface DialogProps {
     children: React.ReactNode;
     dialogId: string;
     defaultOpen?: boolean;
-    isControlled?: boolean | undefined;
-    controlledIsOpen?: boolean | undefined;
+    isOpen?: boolean;
     onOpen?: () => void;
     onClose?: () => void;
     onToggle?: (isOpen: boolean) => void;
+    isDisabled?: boolean;
 }
 
 /**
@@ -40,32 +43,35 @@ interface DialogProps {
 function Dialog({
     children,
     defaultOpen,
-    isControlled,
-    controlledIsOpen,
+    isOpen,
     onOpen,
     onClose,
     onToggle,
     dialogId,
+    isDisabled,
 }: DialogProps) {
     return (
         <DialogProvider
-            isControlled={isControlled}
             defaultOpen={defaultOpen}
-            controlledIsOpen={controlledIsOpen}
+            isOpen={isOpen}
             onOpen={onOpen}
             onClose={onClose}
             onToggle={onToggle}
             dialogId={dialogId}
+            isDisabled={isDisabled}
         >
             {children}
         </DialogProvider>
     );
 }
-Dialog.displayName = 'Dialog';
+Dialog.displayName = "Dialog";
 
 interface iDialogContent extends React.HTMLAttributes<HTMLDivElement> {
     children: React.ReactNode;
+    controlledOutsideClick?: () => void;
     windowContainerClasssName?: string;
+    captureScroll?: boolean;
+    disableEscapeKey?: boolean;
 }
 
 /**
@@ -79,12 +85,16 @@ interface iDialogContent extends React.HTMLAttributes<HTMLDivElement> {
  */
 function DialogContent({
     children,
+    controlledOutsideClick,
     windowContainerClasssName,
+    captureScroll = true,
+    disableEscapeKey = false,
     className,
     onClick,
     ...props
 }: iDialogContent) {
     const { isOpen, isControlled, dialogId, setIsOpen } = useDialog();
+    useBodyScrollLock(isOpen && captureScroll);
 
     const handleInnerClick = useCallback(
         (event: React.MouseEvent<HTMLDivElement>) => {
@@ -94,95 +104,162 @@ function DialogContent({
         [onClick],
     );
 
+    const handleOutsideClick = useCallback(() => {
+        if (isControlled) {
+            controlledOutsideClick?.();
+        } else {
+            setIsOpen(false);
+        }
+    }, [isControlled, controlledOutsideClick, setIsOpen]);
+
+    useKeyboardScoped(
+        [
+            {
+                keys: ["Escape"],
+                handler: disableEscapeKey ? () => {} : handleOutsideClick,
+            },
+        ],
+        {
+            target: document.body ?? null,
+            when: isOpen,
+        },
+    );
+
     if (!isOpen) return null;
 
     return (
-        <div
-            className={clsx(
-                'fixed inset-0 bg-black/50 w-screen h-screen flex justify-center items-center',
-                windowContainerClasssName,
-            )}
-            aria-hidden={!isOpen}
-            onClick={() => setIsOpen(false)}
-        >
+        <Portal layer="Dialog" zIndex={1000}>
             <div
-                className={clsx('w-90 h-90 bg-white', className)}
-                {...props}
-                data-open={isOpen}
-                data-controlled={isControlled}
-                data-dialog-id={dialogId}
+                className={clsx(
+                    "fixed inset-0 bg-black/50 w-screen h-screen flex justify-center items-center z-100",
+                    windowContainerClasssName,
+                )}
                 aria-hidden={!isOpen}
-                onClick={handleInnerClick}
+                onClick={handleOutsideClick}
+                style={{ pointerEvents: "auto" }}
             >
-                {children}
+                <div
+                    className={clsx(
+                        "w-150 h-120 bg-white z-102 overflow-y-auto",
+                        className,
+                    )}
+                    {...props}
+                    data-open={isOpen}
+                    data-controlled={isControlled}
+                    data-dialog-id={dialogId}
+                    aria-hidden={!isOpen}
+                    onClick={handleInnerClick}
+                >
+                    {children}
+                </div>
             </div>
-        </div>
+        </Portal>
     );
 }
-DialogContent.displayName = 'DialogContent';
+DialogContent.displayName = "DialogContent";
 
 /**
- * Toggle Button for the Dialog Component
+ * Button for the Dialog Component
  * Can be used in both controlled and uncontrolled modes.
  *
  * @param {React.ReactNode} children - Content to render inside the button
+ * @param {string} [trigger] - Trigger for the button (open, close, toggle)
+ * @param {boolean} [ignoreDialogDisable] - Ignore the dialog disable state
  * @param {React.HTMLAttributes<HTMLButtonElement>} props - Additional HTML div attributes
  */
-function DialogTrigger({
+interface DialogButtonProps
+    extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+    children: React.ReactNode;
+    trigger?: "open" | "close" | "toggle";
+    ignoreDialogDisable?: boolean;
+}
+
+function DialogButton({
     children,
     onClick,
+    trigger = "toggle",
+    className,
+    ignoreDialogDisable = true,
+    disabled,
     ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-    const { toggleOpen, isOpen } = useDialog();
+}: DialogButtonProps) {
+    const {
+        setIsOpen,
+        toggleOpen,
+        isOpen,
+        isDisabled: dialogIsDisabled,
+    } = useDialog();
 
-    const handleButtonClick = useCallback(
-        (event: React.MouseEvent<HTMLButtonElement>) => {
-            onClick?.(event);
-            toggleOpen();
+    const handleClick = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            onClick?.(e);
+            switch (trigger) {
+                case "toggle":
+                    toggleOpen();
+                    break;
+                case "close":
+                    setIsOpen(false);
+                    break;
+                case "open":
+                    setIsOpen(true);
+                    break;
+            }
         },
-        [onClick, toggleOpen],
+        [trigger, onClick],
     );
 
     return (
         <button
-            onClick={handleButtonClick}
-            data-dialog-toggle-to={!isOpen}
             {...props}
+            disabled={!ignoreDialogDisable && (disabled || dialogIsDisabled)}
+            onClick={handleClick}
+            className={clsx("select-none cursor-pointer", className)}
+            data-variant={trigger}
+            data-open={isOpen}
         >
             {children}
         </button>
     );
 }
-DialogTrigger.displayName = 'DialogTrigger';
+DialogButton.displayName = "DialogButton";
 
-/**
- * Close Button for the Dialog Component
- * Can be used in both controlled and uncontrolled modes.
- *
- * @param {React.ReactNode} children - Content to render inside the button
- * @param {React.HTMLAttributes<HTMLButtonElement>} props - Additional HTML div attributes
- */
-function DialogClose({
+interface DialogHeaderProps {
+    children: React.ReactNode;
+    closeButton?: React.ReactNode;
+    containerProps?: React.HTMLAttributes<HTMLDivElement>;
+    headerProps?: React.HTMLAttributes<HTMLDivElement>;
+    buttonProps?: DialogButtonProps;
+}
+
+function DialogHeader({
     children,
-    onClick,
-    ...props
-}: React.HTMLAttributes<HTMLButtonElement>) {
-    const { setIsOpen } = useDialog();
-
-    const handleButtonClick = useCallback(
-        (event: React.MouseEvent<HTMLButtonElement>) => {
-            onClick?.(event);
-            setIsOpen(false);
-        },
-        [onClick, setIsOpen],
-    );
-
+    containerProps,
+    headerProps,
+    closeButton = "X",
+    buttonProps,
+}: DialogHeaderProps) {
     return (
-        <button onClick={handleButtonClick} {...props}>
-            {children}
-        </button>
+        <div
+            {...containerProps}
+            className={clsx(
+                "flex flex-nowrap justify-between items-center select-none",
+                containerProps?.className,
+            )}
+        >
+            <section {...headerProps}>{children}</section>
+            <DialogButton
+                {...buttonProps}
+                trigger="close"
+                className={clsx(
+                    "hover:bg-gray-200 p-1 rounded",
+                    buttonProps?.className,
+                )}
+            >
+                {closeButton}
+            </DialogButton>
+        </div>
     );
 }
-DialogClose.displayName = 'DialogClose';
+DialogHeader.displayName = "DialogHeader";
 
-export { type DialogProps, Dialog, DialogContent, DialogTrigger, DialogClose };
+export { type DialogProps, Dialog, DialogContent, DialogButton, DialogHeader };
