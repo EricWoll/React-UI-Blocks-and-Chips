@@ -1,5 +1,5 @@
-import { useMemo, HTMLAttributes, ReactNode, useEffect } from 'react';
-import { itemsToRender } from '@/lib/tools/react/itemsToRender.tools.react';
+import { useMemo, HTMLAttributes, ReactNode, useEffect } from "react";
+import { itemsToRender } from "@/lib/tools/react/itemsToRender.tools.react";
 
 interface TabItemProps extends HTMLAttributes<HTMLDivElement> {
     isActive?: boolean;
@@ -45,7 +45,7 @@ function TabItem({
             hidden={!isActive}
             tabIndex={isActive ? 0 : -1}
             style={{
-                display: isActive ? undefined : 'none',
+                display: isActive ? undefined : "none",
                 ...style,
             }}
             {...props}
@@ -54,7 +54,7 @@ function TabItem({
         </div>
     );
 }
-TabItem.displayName = 'TabItem';
+TabItem.displayName = "TabItem";
 
 interface TabsProps extends HTMLAttributes<HTMLDivElement> {
     currentTab: string;
@@ -93,7 +93,7 @@ function Tabs({ children, currentTab, onTabChange, ...props }: TabsProps) {
             itemsToRender<TabItemProps>({
                 children,
                 matchComponent: TabItem,
-                displayName: 'TabItem',
+                displayName: "TabItem",
                 getInjectedProps: (child) => ({
                     isActive: child.props.tabId === currentTab,
                 }),
@@ -111,6 +111,6 @@ function Tabs({ children, currentTab, onTabChange, ...props }: TabsProps) {
         </div>
     );
 }
-Tabs.displayName = 'Tabs';
+Tabs.displayName = "Tabs";
 
 export { TabItem, Tabs };
