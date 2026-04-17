@@ -19,21 +19,21 @@ function searchJsonAdvanced<T extends Record<string, any>>(
     query: string | number | RegExp,
     options: {
         keys?: string[];
-        matchType?: 'partial' | 'exact' | 'regex';
+        matchType?: "partial" | "exact" | "regex";
     } = {},
 ): { path: string; value: T; matches: { key: string; value: any }[] }[] {
-    const { keys, matchType = 'partial' } = options;
+    const { keys, matchType = "partial" } = options;
 
-    const isAllSearch = typeof query === 'string' && query.trim() === '';
+    const isAllSearch = typeof query === "string" && query.trim() === "";
 
     function matchesValue(value: any): boolean {
         if (isAllSearch) return true; // Always match if ALL search
-        if (typeof query === 'number') return value === query;
+        if (typeof query === "number") return value === query;
         if (query instanceof RegExp)
-            return typeof value === 'string' && query.test(value);
-        if (typeof value === 'string') {
-            if (matchType === 'exact') return value === query;
-            if (matchType === 'partial')
+            return typeof value === "string" && query.test(value);
+        if (typeof value === "string") {
+            if (matchType === "exact") return value === query;
+            if (matchType === "partial")
                 return value
                     .toLowerCase()
                     .includes(String(query).toLowerCase());

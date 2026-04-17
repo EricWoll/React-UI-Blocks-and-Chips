@@ -1,5 +1,5 @@
 import { Children, cloneElement, ReactElement, ReactNode } from 'react';
-import isElement from '@/lib/tools/uiTools/isElement.uiTools';
+import isElement from '@/lib/tools/react/isElement.tools.react';
 
 /**
  * Maps over React children, identifies specific component types, and injects

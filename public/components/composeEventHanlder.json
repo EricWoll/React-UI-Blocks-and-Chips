@@ -1,0 +1,12 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "composeEventHanlder",
+  "files": [
+    {
+      "path": "src/lib/tools/react/composeEventHandler.tools.react.tsx",
+      "content": "export function composeEventHandlers<E>(\n  ...handlers: Array<((event: E) => void) | undefined>\n) {\n  return (event: E) => {\n    for (const handler of handlers) {\n      handler?.(event);\n    }\n  };\n}\n",
+      "type": "registry:lib"
+    }
+  ],
+  "type": "registry:lib"
+}

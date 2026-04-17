@@ -1,4 +1,4 @@
-import { isValidElement } from 'react';
+import { isValidElement } from "react";
 
 /**
  * Type guard that checks if a React node is a specific component type.
@@ -46,7 +46,7 @@ function isElement<T>(
     if (nodeType === element) return true;
 
     // Function component with displayName or name match
-    if (typeof nodeType === 'function') {
+    if (typeof nodeType === "function") {
         const functionType = nodeType as {
             displayName?: string;
             name?: string;
@@ -60,5 +60,5 @@ function isElement<T>(
     return false;
 }
 
-isElement.displayName = 'isElement';
+isElement.displayName = "isElement";
 export default isElement;

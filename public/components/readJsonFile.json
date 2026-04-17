@@ -1,0 +1,12 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "readJsonFile",
+  "files": [
+    {
+      "path": "src/lib/tools/json/readJsonFile.tools.json.ts",
+      "content": "/**\n * Reads a File object as text with optional progress tracking.\n */\nfunction readFileAsText(\n    file: File,\n    onProgress?: (percent: number) => void,\n): Promise<string> {\n    return new Promise((resolve, reject) => {\n        const reader = new FileReader();\n\n        if (onProgress) {\n            reader.onprogress = (event) => {\n                if (event.lengthComputable) {\n                    const percent = (event.loaded / event.total) * 100;\n                    onProgress(percent);\n                }\n            };\n        }\n\n        reader.onload = (event) =>\n            resolve((event.target?.result as string) ?? \"\");\n        reader.onerror = (error) => reject(error);\n        reader.readAsText(file);\n    });\n}\n\nreadFileAsText.displayName = \"readFileAsText\";\n\nexport { readFileAsText };\n",
+      "type": "registry:lib"
+    }
+  ],
+  "type": "registry:lib"
+}

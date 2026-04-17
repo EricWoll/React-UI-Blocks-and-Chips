@@ -1,0 +1,12 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "downloadJsonFile",
+  "files": [
+    {
+      "path": "src/lib/tools/json/downloadJsonFile.tools.json.ts",
+      "content": "function downloadJSONFile<T>(data: T, filename: string) {\n  const json = JSON.stringify(data, null, 2);\n  const blob = new Blob([json], { type: \"application/json\" });\n  const url = URL.createObjectURL(blob);\n\n  const a = document.createElement(\"a\");\n  a.href = url;\n  a.download = filename; // Default download to 'Downloads' folder\n  document.body.appendChild(a);\n  a.click();\n  a.remove();\n\n  URL.revokeObjectURL(url);\n}\n\nexport { downloadJSONFile };\n",
+      "type": "registry:lib"
+    }
+  ],
+  "type": "registry:lib"
+}

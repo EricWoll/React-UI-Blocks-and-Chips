@@ -1,0 +1,12 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "isElement",
+  "files": [
+    {
+      "path": "src/lib/tools/react/isElement.tools.react.tsx",
+      "content": "import { isValidElement } from \"react\";\n\n/**\n * Type guard that checks if a React node is a specific component type.\n *\n * This function safely narrows a `React.ReactNode` to a `React.ReactElement<T>`\n * by checking if the node matches the provided component. It performs two levels\n * of matching:\n * 1. Direct reference comparison (most reliable)\n * 2. Name-based comparison using `displayName` or function `name` (fallback)\n *\n * @template T - The props type of the component being checked\n *\n * @param node - The React node to check (can be element, string, number, null, etc.)\n * @param element - The component type to match against (e.g., TabItem, CollapseAble)\n * @param displayName - The display name to match as a fallback (e.g., 'TabItem')\n *\n * @returns `true` if the node is a React element of the specified component type,\n *          `false` otherwise. When `true`, TypeScript narrows the type to\n *          `React.ReactElement<T>`.\n *\n * @example\n * // Check if a child is a TabItem component\n * const child = <TabItem tabId=\"tab1\">Content</TabItem>;\n * if (isElement(child, TabItem, 'TabItem')) {\n *   // TypeScript now knows child is React.ReactElement<TabItemProps>\n *   console.log(child.props.tabId); // Type-safe access\n * }\n *\n * @example\n * // Filter children to only TabItem components\n * const tabItems = Children.toArray(children).filter(\n *   (child) => isElement(child, TabItem, 'TabItem')\n * );\n */\nfunction isElement<T>(\n    node: React.ReactNode,\n    element: React.ComponentType<T>,\n    displayName: string,\n): node is React.ReactElement<T> {\n    if (!isValidElement(node)) return false;\n\n    const nodeType = node.type;\n\n    // Direct component match\n    if (nodeType === element) return true;\n\n    // Function component with displayName or name match\n    if (typeof nodeType === \"function\") {\n        const functionType = nodeType as {\n            displayName?: string;\n            name?: string;\n        };\n        return (\n            functionType.displayName === displayName ||\n            functionType.name === displayName\n        );\n    }\n\n    return false;\n}\n\nisElement.displayName = \"isElement\";\nexport default isElement;\n",
+      "type": "registry:lib"
+    }
+  ],
+  "type": "registry:lib"
+}

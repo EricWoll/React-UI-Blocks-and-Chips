@@ -1,0 +1,12 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "createId",
+  "files": [
+    {
+      "path": "src/lib/tools/createId.tools.ts",
+      "content": "/**\n * Creates a unique ID for UI components.\n * If an ID is provided, it will be used.\n * Otherwise, it will generate a random ID using crypto.randomUUID() if available,\n * or fall back to a random string.\n *\n * @param {string | undefined} id - The provided ID (optional)\n * @param {string} name - The name of component \"{name} - {generatedId}\" (used for default ID generation)\n * @returns {string} The generated or provided ID\n *\n * @example\n * // With provided ID\n * const newId = createId('custom-id', 'Button');\n *\n * @example\n * // Without provided ID (generates random ID)\n * const newId = createId(undefined, 'Button');\n */\nfunction createId(id: string | undefined, name: string): string {\n  if (id) return id;\n  if (\n    typeof window !== \"undefined\" &&\n    \"crypto\" in window &&\n    \"randomUUID\" in crypto\n  ) {\n    return crypto.randomUUID();\n  }\n  return `${name}-${Math.random().toString(36).slice(2)}`;\n}\nexport default createId;",
+      "type": "registry:lib"
+    }
+  ],
+  "type": "registry:lib"
+}

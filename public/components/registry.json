@@ -1,0 +1,345 @@
+{
+    "$schema": "https://ui.shadcn.com/schema/registry.json",
+    "name": "challenges",
+    "homepage": "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev",
+    "items": [
+        {
+            "name": "accordion",
+            "type": "registry:ui",
+            "registryDependencies": [
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/itemsToRender.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/isElement.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/composeEventHandler.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/collapseAble.json"
+            ],
+            "files": [
+                {
+                    "path": "src/components/ui/accordion/accordion.components.tsx",
+                    "type": "registry:ui"
+                }
+            ]
+        },
+        {
+            "name": "autoComplete",
+            "type": "registry:ui",
+            "dependencies": ["clsx"],
+            "registryDependencies": [
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useKeyboardScoped.json"
+            ],
+            "files": [
+                {
+                    "path": "src/components/ui/autoComplete/autoComplete.components.tsx",
+                    "type": "registry:ui"
+                }
+            ]
+        },
+        {
+            "name": "collapseAble",
+            "type": "registry:ui",
+            "dependencies": ["clsx"],
+            "registryDependencies": [
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/createId.json"
+            ],
+            "files": [
+                {
+                    "path": "src/components/ui/collapseAble/collapseAble.components.tsx",
+                    "type": "registry:ui"
+                },
+                {
+                    "path": "src/components/ui/collapseAble/collapseAble.contexts.tsx",
+                    "type": "registry:item"
+                }
+            ]
+        },
+        {
+            "name": "dialog",
+            "type": "registry:ui",
+            "dependencies": ["clsx"],
+            "registryDependencies": [
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useBodyScrollLock.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useKeyboardScoped.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/portal.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/createId.json"
+            ],
+            "files": [
+                {
+                    "path": "src/components/ui/dialog/dialog.components.tsx",
+                    "type": "registry:ui"
+                },
+                {
+                    "path": "src/components/ui/dialog/dialog.contexts.tsx",
+                    "type": "registry:item"
+                }
+            ]
+        },
+        {
+            "name": "drawer",
+            "type": "registry:ui",
+            "dependencies": ["clsx"],
+            "files": [
+                {
+                    "path": "src/components/ui/drawer/drawer.components.tsx",
+                    "type": "registry:ui"
+                }
+            ]
+        },
+        {
+            "name": "navigationBar",
+            "type": "registry:ui",
+            "registryDependencies": [
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/drawer.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useWindowSize.json"
+            ],
+            "files": [
+                {
+                    "path": "src/components/ui/navigationBar/navigationBar.components.tsx",
+                    "type": "registry:ui"
+                },
+                {
+                    "path": "src/components/ui/navigationBar/navigationBar.contexts.tsx",
+                    "type": "registry:item"
+                }
+            ]
+        },
+        {
+            "name": "popover",
+            "type": "registry:ui",
+            "dependencies": ["clsx"],
+            "registryDependencies": [
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useAutoPosition.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useKeyboardScoped.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/portal.json"
+            ],
+            "files": [
+                {
+                    "path": "src/components/ui/popover/popover.components.tsx",
+                    "type": "registry:ui"
+                }
+            ]
+        },
+        {
+            "name": "portal",
+            "type": "registry:ui",
+            "files": [
+                {
+                    "path": "src/components/ui/portal/portal.components.tsx",
+                    "type": "registry:ui"
+                },
+                {
+                    "path": "src/components/ui/portal/portal.contexts.tsx",
+                    "type": "registry:item"
+                }
+            ]
+        },
+        {
+            "name": "progress",
+            "type": "registry:ui",
+            "dependencies": ["clsx"],
+            "files": [
+                {
+                    "path": "src/components/ui/progress/progress.components.tsx",
+                    "type": "registry:ui"
+                }
+            ]
+        },
+        {
+            "name": "searchbar",
+            "type": "registry:ui",
+            "dependencies": ["clsx", "lucide-react"],
+            "files": [
+                {
+                    "path": "src/components/ui/searchbar/searchbar.components.tsx",
+                    "type": "registry:ui"
+                }
+            ]
+        },
+        {
+            "name": "tabs",
+            "type": "registry:ui",
+            "dependencies": ["clsx"],
+            "registryDependencies": [
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/itemsToRender.json"
+            ],
+            "files": [
+                {
+                    "path": "src/components/ui/tabs/tabs.components.tsx",
+                    "type": "registry:ui"
+                }
+            ]
+        },
+        {
+            "name": "typewriter",
+            "type": "registry:ui",
+            "dependencies": ["clsx"],
+            "files": [
+                {
+                    "path": "src/components/ui/typewriter/components/typewriter.components.tsx",
+                    "type": "registry:ui"
+                },
+                {
+                    "path": "src/components/ui/typewriter/components/animatedCursor.components.tsx",
+                    "type": "registry:ui"
+                },
+                {
+                    "path": "src/components/ui/typewriter/css/cursorBlink.typeWriter.css",
+                    "type": "registry:style"
+                },
+                {
+                    "path": "src/components/ui/typewriter/hooks/useTypewriterEffect.hooks.tsx",
+                    "type": "registry:hook"
+                }
+            ]
+        },
+        {
+            "name": "simpleJsonContext",
+            "type": "registry:item",
+            "registryDependencies": [
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/readJsonFile.json"
+            ],
+            "files": [
+                {
+                    "path": "src/contexts/jsonContexts/simple.jsonContexts.tsx",
+                    "type": "registry:item"
+                }
+            ]
+        },
+        {
+            "name": "advancedJsonContext",
+            "type": "registry:item",
+            "registryDependencies": [
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/readJsonFile.json"
+            ],
+            "files": [
+                {
+                    "path": "src/contexts/jsonContexts/advanced.jsonContexts.tsx",
+                    "type": "registry:item"
+                }
+            ]
+        },
+        {
+            "name": "useAutoPosition",
+            "type": "registry:hook",
+            "registryDependencies": [
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useWindowSize.json"
+            ],
+            "files": [
+                {
+                    "path": "src/hooks/useAutoPosition.hooks.ts",
+                    "type": "registry:hook"
+                }
+            ]
+        },
+        {
+            "name": "useBodyScrollLock",
+            "type": "registry:hook",
+            "files": [
+                {
+                    "path": "src/hooks/useBodyScrollLock.hooks.ts",
+                    "type": "registry:hook"
+                }
+            ]
+        },
+        {
+            "name": "useKeyboardScoped",
+            "type": "registry:hook",
+            "files": [
+                {
+                    "path": "src/hooks/useKeyboardScoped.hooks.ts",
+                    "type": "registry:hook"
+                }
+            ]
+        },
+        {
+            "name": "useWindowSize",
+            "type": "registry:hook",
+            "files": [
+                {
+                    "path": "src/hooks/useWindowSize.hooks.ts",
+                    "type": "registry:hook"
+                }
+            ]
+        },
+        {
+            "name": "downloadJsonFile",
+            "type": "registry:lib",
+            "files": [
+                {
+                    "path": "src/lib/tools/json/downloadJsonFile.tools.json.ts",
+                    "type": "registry:lib"
+                }
+            ]
+        },
+        {
+            "name": "jsonSearchAdvanced",
+            "type": "registry:lib",
+            "files": [
+                {
+                    "path": "src/lib/tools/json/jsonSearchAdvanced.tools.json.ts",
+                    "type": "registry:lib"
+                }
+            ]
+        },
+        {
+            "name": "readJsonFile",
+            "type": "registry:lib",
+            "files": [
+                {
+                    "path": "src/lib/tools/json/readJsonFile.tools.json.ts",
+                    "type": "registry:lib"
+                }
+            ]
+        },
+        {
+            "name": "composeEventHanlder",
+            "type": "registry:lib",
+            "files": [
+                {
+                    "path": "src/lib/tools/react/composeEventHandler.tools.react.tsx",
+                    "type": "registry:lib"
+                }
+            ]
+        },
+        {
+            "name": "isElement",
+            "type": "registry:lib",
+            "files": [
+                {
+                    "path": "src/lib/tools/react/isElement.tools.react.tsx",
+                    "type": "registry:lib"
+                }
+            ]
+        },
+        {
+            "name": "itemsToRender",
+            "type": "registry:lib",
+            "registryDependencies": [
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/isElement.json"
+            ],
+            "files": [
+                {
+                    "path": "src/lib/tools/react/itemsToRender.tools.react.tsx",
+                    "type": "registry:lib"
+                }
+            ]
+        },
+        {
+            "name": "createId",
+            "type": "registry:lib",
+            "files": [
+                {
+                    "path": "src/lib/tools/createId.tools.ts",
+                    "type": "registry:lib"
+                }
+            ]
+        }
+    ]
+}

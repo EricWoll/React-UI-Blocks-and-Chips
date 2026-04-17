@@ -1,0 +1,12 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "useBodyScrollLock",
+  "files": [
+    {
+      "path": "src/hooks/useBodyScrollLock.hooks.ts",
+      "content": "\"use client\";\n\nimport { useLayoutEffect } from \"react\";\n\nexport function useBodyScrollLock(locked: boolean) {\n  useLayoutEffect(() => {\n    if (!locked) return;\n\n    const html = document.documentElement;\n    const body = document.body;\n\n    const prevHtmlOverflow = html.style.overflow;\n    const prevBodyOverflow = body.style.overflow;\n    const prevBodyPaddingRight = body.style.paddingRight;\n\n    const scrollbarWidth =\n      window.innerWidth - document.documentElement.clientWidth;\n\n    html.style.overflow = \"hidden\";\n    body.style.overflow = \"hidden\";\n    body.style.paddingRight = `${scrollbarWidth}px`;\n\n    return () => {\n      html.style.overflow = prevHtmlOverflow;\n      body.style.overflow = prevBodyOverflow;\n      body.style.paddingRight = prevBodyPaddingRight;\n    };\n  }, [locked]);\n};",
+      "type": "registry:hook"
+    }
+  ],
+  "type": "registry:hook"
+}

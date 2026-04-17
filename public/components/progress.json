@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "progress",
+  "dependencies": [
+    "clsx"
+  ],
+  "files": [
+    {
+      "path": "src/components/ui/progress/progress.components.tsx",
+      "content": "import clsx from \"clsx\";\nimport { HTMLAttributes } from \"react\";\n\ninterface ProgressProps extends HTMLAttributes<HTMLDivElement> {\n  value: number;\n  max?: number;\n  progressSlider?: HTMLAttributes<HTMLDivElement>;\n  progressBackground?: HTMLAttributes<HTMLDivElement>;\n}\n\nexport default function Prgress({\n  value,\n  max = 100,\n  progressSlider,\n  progressBackground,\n  className,\n  ...props\n}: ProgressProps) {\n  return (\n    <div {...props} className={clsx(\"relative\", className)}>\n      <div\n        {...progressSlider}\n        className={clsx(\n          \"absolute top-0 left-0 h-full bg-blue-500\",\n          progressSlider?.className,\n        )}\n        style={{ width: `${(value / max) * 100}%`, ...progressSlider?.style }}\n      ></div>\n      <div\n        {...progressBackground}\n        className={clsx(\n          \"h-2 w-full bg-gray-200\",\n          progressBackground?.className,\n        )}\n      ></div>\n    </div>\n  );\n}\n",
+      "type": "registry:ui"
+    }
+  ],
+  "type": "registry:ui"
+}
