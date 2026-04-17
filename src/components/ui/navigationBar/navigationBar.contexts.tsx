@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, {
     useState,
@@ -8,11 +8,11 @@ import React, {
     useCallback,
     useEffect,
     useRef,
-} from "react";
+} from 'react';
 
-import useWindowSize from "@/hooks/useWindowSize.hooks";
+import useWindowSize from '@/hooks/useWindowSize.hooks';
 
-type NavBarMode = "mobile" | "desktop";
+type NavBarMode = 'mobile' | 'desktop';
 
 interface iNavBarContext {
     isOpen: boolean;
@@ -22,7 +22,7 @@ interface iNavBarContext {
     mode: NavBarMode;
     updateMode: (mode: NavBarMode) => void;
 
-    headerElementRef: React.RefObject<HTMLElement>;
+    headerElementRef: React.RefObject<HTMLElement | null>;
     headerHeightPx: number;
 
     activeNavItemId: string;
@@ -58,9 +58,9 @@ function NavBarProvider({
     });
 
     const [isOpen, setIsOpen] = useState<boolean>(false);
-    const [mode, setMode] = useState<NavBarMode>("mobile");
+    const [mode, setMode] = useState<NavBarMode>('mobile');
     const [headerHeightPx, setHeaderHeightPx] = useState<number>(0);
-    const [activeNavItemId, setActiveNavItemId] = useState<string>("");
+    const [activeNavItemId, setActiveNavItemId] = useState<string>('');
 
     const headerElementRef = useRef<HTMLElement>(null);
     const headerObserverRef = useRef<ResizeObserver | null>(null);
@@ -88,7 +88,7 @@ function NavBarProvider({
 
             const pathnameMatches =
                 pathname === itemPathname ||
-                pathname.startsWith(itemPathname + "/");
+                pathname.startsWith(itemPathname + '/');
 
             if (!pathnameMatches) continue;
             if (item.requireQuery === true && query !== itemQuery) continue;
@@ -101,7 +101,7 @@ function NavBarProvider({
             }
         }
 
-        setActiveNavItemId(bestMatch?.id ?? "");
+        setActiveNavItemId(bestMatch?.id ?? '');
     }, []);
 
     const registerNavItem = useCallback((item: iNavItemRegistration) => {
@@ -144,13 +144,13 @@ function NavBarProvider({
         if (width === 0) return;
 
         if (width < widthSmBreakpointPx) {
-            setMode("mobile");
+            setMode('mobile');
             setIsOpen(false);
         } else if (widthSmBreakpointPx < width && width < widthMdBreakpointPx) {
-            setMode("desktop");
+            setMode('desktop');
             setIsOpen(false);
         } else {
-            setMode("desktop");
+            setMode('desktop');
         }
     }, [width, widthSmBreakpointPx, widthMdBreakpointPx]);
 
@@ -191,24 +191,24 @@ function NavBarProvider({
         </NavBarContext.Provider>
     );
 }
-NavBarProvider.displayName = "NavBarProvider";
+NavBarProvider.displayName = 'NavBarProvider';
 
 function useNavBar() {
     const context = useContext(NavBarContext);
     if (!context) {
-        throw new Error("useNavBar must be used within a NavBarProvider");
+        throw new Error('useNavBar must be used within a NavBarProvider');
     }
     return context;
 }
 
 const parsePath = (path: string) => {
-    const [pathnameAndQuery, hash = ""] = path.split("#");
-    const [pathname, query = ""] = pathnameAndQuery.split("?");
+    const [pathnameAndQuery, hash = ''] = path.split('#');
+    const [pathname, query = ''] = pathnameAndQuery.split('?');
 
     return {
         pathname,
-        query: query ? `?${query}` : "",
-        hash: hash ? `#${hash}` : "",
+        query: query ? `?${query}` : '',
+        hash: hash ? `#${hash}` : '',
     };
 };
 
