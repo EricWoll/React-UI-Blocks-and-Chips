@@ -20,16 +20,25 @@ Blocks are larger, more opinionated UI compositions. They may combine multiple c
 
 ### If you want a specific UI Chip or Block
 
-Install React and Typescript
+1. Install React and Typescript
 
 ```bash
 npm install react@latest react-dom@latest
 npm install --save-dev typescript @types/react @types/react-dom @types/node
 ```
 
-Install [Tailwind](https://tailwindcss.com/docs/installation/using-vite)
+2. Install [Tailwind](https://tailwindcss.com/docs/installation/using-vite)
 
-Find the UI Chip or Block in the guthub repo. Then copy and paste into a file in your project.
+3. Install [Shadcn](https://ui.shadcn.com/docs/installation/manual)
+
+4. Run this command for any component you want
+
+```bash
+npm shadcn@latest add /components/{component_name}.json
+```
+
+- "component_name" is the name of the component you want.
+- Make sure to <b>always</b> add ".json" to the url or you will get an error when running the command.
 
 ### If you want the full Next.js project
 
@@ -59,13 +68,13 @@ http://localhost:3000
 
 - Build a consistent, reusable UI component library.
 - Provide a visual reference for all chips and blocks.
-- Support reuse across multiple projects.
+- Support reusability across multiple projects.
 
 ## Roadmap
 
 - Add more chips and blocks.
-- Create a component gallery.
 - Add documentation pages.
+- Create a component gallery.
 - Introduce automated testing.
 
 ## License
