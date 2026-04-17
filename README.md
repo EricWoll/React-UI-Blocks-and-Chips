@@ -34,7 +34,7 @@ npm install --save-dev typescript @types/react @types/react-dom @types/node
 4. Run this command for any component you want
 
 ```bash
-npm shadcn@latest add /components/{component_name}.json
+npm shadcn@latest add https://react-chips-and-blocks.netlify.app/components/{component_name}.json
 ```
 
 - "component_name" is the name of the component you want.

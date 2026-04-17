@@ -2,10 +2,10 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "accordion",
   "registryDependencies": [
-    "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/itemsToRender.json",
-    "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/isElement.json",
-    "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/composeEventHandler.json",
-    "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/collapseAble.json"
+    "https://react-chips-and-blocks.netlify.app/components/itemsToRender.json",
+    "https://react-chips-and-blocks.netlify.app/components/isElement.json",
+    "https://react-chips-and-blocks.netlify.app/components/composeEventHandler.json",
+    "https://react-chips-and-blocks.netlify.app/components/collapseAble.json"
   ],
   "files": [
     {
