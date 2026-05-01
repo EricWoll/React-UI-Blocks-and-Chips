@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
     createContext,
@@ -8,9 +8,9 @@ import {
     useEffect,
     useRef,
     useState,
-} from "react";
+} from 'react';
 
-import { readFileAsText } from "@/lib/tools/json/readJsonFile.tools.json";
+import { readFileAsText } from '@/lib/tools/json/readJsonFile.tools.json';
 
 type AdvancedFileDataContextType<T> = {
     data: T | null;
@@ -110,7 +110,7 @@ function createAdvancedFileJsonContext<T>(
     options: CreateAdvancedFileJsonContextOptions<T> = {},
 ) {
     const {
-        displayName = "FileJson",
+        displayName = 'FileJson',
         parse,
         validate,
         transform,
@@ -228,11 +228,11 @@ function createAdvancedFileJsonContext<T>(
             (fileToValidate: File): Error | null => {
                 if (allowedExtensions && allowedExtensions.length > 0) {
                     const ext =
-                        "." +
-                        fileToValidate.name.split(".").pop()?.toLowerCase();
+                        '.' +
+                        fileToValidate.name.split('.').pop()?.toLowerCase();
                     if (!allowedExtensions.includes(ext)) {
                         return new Error(
-                            `${displayName}: Invalid file type. Expected ${allowedExtensions.join(", ")}`,
+                            `${displayName}: Invalid file type. Expected ${allowedExtensions.join(', ')}`,
                         );
                     }
                 }
@@ -266,7 +266,9 @@ function createAdvancedFileJsonContext<T>(
             setError(null);
             setProgress(0);
 
-            readFileAsText(file, setProgress)
+            readFileAsText(file, {
+                onProgress: (percent) => setProgress(percent),
+            })
                 .then((text) => {
                     if (cancelled) return;
                     loadFromText(text);
@@ -392,11 +394,11 @@ function createAdvancedFileJsonContext<T>(
                 if (!data) return;
 
                 const json = JSON.stringify(data, null, 2);
-                const blob = new Blob([json], { type: "application/json" });
+                const blob = new Blob([json], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
-                const link = document.createElement("a");
+                const link = document.createElement('a');
                 link.href = url;
-                link.download = filename || file?.name || "data.json";
+                link.download = filename || file?.name || 'data.json';
                 link.click();
                 URL.revokeObjectURL(url);
             },
@@ -463,7 +465,7 @@ function createAdvancedFileJsonContext<T>(
         useFileJsonContext,
     };
 }
-createAdvancedFileJsonContext.displayName = "createAdvancedFileJsonContext";
+createAdvancedFileJsonContext.displayName = 'createAdvancedFileJsonContext';
 
 export {
     createAdvancedFileJsonContext,
