@@ -7,13 +7,13 @@
             "name": "accordion",
             "type": "registry:ui",
             "registryDependencies": [
-                "https://react-chips-and-blocks.netlify.app/components/itemsToRender.json",
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/collapseAble.json",
 
-                "https://react-chips-and-blocks.netlify.app/components/isElement.json",
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/itemsToRender.json",
 
-                "https://react-chips-and-blocks.netlify.app/components/composeEventHandler.json",
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/isElement.json",
 
-                "https://react-chips-and-blocks.netlify.app/components/collapseAble.json"
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/composeEventHandler.json"
             ],
             "files": [
                 {
@@ -25,9 +25,10 @@
         {
             "name": "autoComplete",
             "type": "registry:ui",
-            "dependencies": ["clsx"],
             "registryDependencies": [
-                "https://react-chips-and-blocks.netlify.app/components/useKeyboardScoped.json"
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useKeyboard.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json"
             ],
             "files": [
                 {
@@ -39,9 +40,10 @@
         {
             "name": "collapseAble",
             "type": "registry:ui",
-            "dependencies": ["clsx"],
             "registryDependencies": [
-                "https://react-chips-and-blocks.netlify.app/components/createId.json"
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/createId.json"
             ],
             "files": [
                 {
@@ -57,15 +59,16 @@
         {
             "name": "dialog",
             "type": "registry:ui",
-            "dependencies": ["clsx"],
             "registryDependencies": [
-                "https://react-chips-and-blocks.netlify.app/components/useBodyScrollLock.json",
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/portal.json",
 
-                "https://react-chips-and-blocks.netlify.app/components/useKeyboardScoped.json",
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useBodyScrollLock.json",
 
-                "https://react-chips-and-blocks.netlify.app/components/portal.json",
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useKeyboard.json",
 
-                "https://react-chips-and-blocks.netlify.app/components/createId.json"
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/createId.json"
             ],
             "files": [
                 {
@@ -81,7 +84,11 @@
         {
             "name": "drawer",
             "type": "registry:ui",
-            "dependencies": ["clsx"],
+            "registryDependencies": [
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/portal.json"
+            ],
             "files": [
                 {
                     "path": "src/components/ui/drawer/drawer.components.tsx",
@@ -90,12 +97,41 @@
             ]
         },
         {
+            "name": "dropdown",
+            "type": "registry:ui",
+            "registryDependencies": [
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/portal.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useAutoPosition.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/mergeRefs.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/getKeyboardNavigateAble.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/dismissableLayer.json"
+            ],
+            "files": [
+                {
+                    "path": "src/components/ui/dropdown/dropdown.components.tsx",
+                    "type": "registry:ui"
+                },
+                {
+                    "path": "src/components/ui/dropdown/dropdown.contexts.tsx",
+                    "type": "registry:item"
+                }
+            ]
+        },
+        {
             "name": "navigationBar",
             "type": "registry:ui",
             "registryDependencies": [
-                "https://react-chips-and-blocks.netlify.app/components/drawer.json",
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json",
 
-                "https://react-chips-and-blocks.netlify.app/components/useWindowSize.json"
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/drawer.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useWindowSize.json"
             ],
             "files": [
                 {
@@ -111,13 +147,16 @@
         {
             "name": "popover",
             "type": "registry:ui",
-            "dependencies": ["clsx"],
             "registryDependencies": [
-                "https://react-chips-and-blocks.netlify.app/components/useAutoPosition.json",
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useAutoPosition.json",
 
-                "https://react-chips-and-blocks.netlify.app/components/useKeyboardScoped.json",
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/portal.json",
 
-                "https://react-chips-and-blocks.netlify.app/components/portal.json"
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useKeyboard.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/dismissableLayer.json"
             ],
             "files": [
                 {
@@ -143,7 +182,9 @@
         {
             "name": "progress",
             "type": "registry:ui",
-            "dependencies": ["clsx"],
+            "registryDependencies": [
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json"
+            ],
             "files": [
                 {
                     "path": "src/components/ui/progress/progress.components.tsx",
@@ -154,7 +195,7 @@
         {
             "name": "searchbar",
             "type": "registry:ui",
-            "dependencies": ["clsx", "lucide-react"],
+            "dependencies": ["lucide-react"],
             "files": [
                 {
                     "path": "src/components/ui/searchbar/searchbar.components.tsx",
@@ -163,11 +204,29 @@
             ]
         },
         {
+            "name": "select",
+            "type": "registry:ui",
+            "registryDependencies": [
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/dropdown.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json"
+            ],
+            "files": [
+                {
+                    "path": "src/components/ui/select/select.components.tsx",
+                    "type": "registry:ui"
+                },
+                {
+                    "path": "src/components/ui/select/select.contexts.tsx",
+                    "type": "registry:item"
+                }
+            ]
+        },
+        {
             "name": "tabs",
             "type": "registry:ui",
-            "dependencies": ["clsx"],
             "registryDependencies": [
-                "https://react-chips-and-blocks.netlify.app/components/itemsToRender.json"
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/itemsToRender.json"
             ],
             "files": [
                 {
@@ -179,7 +238,9 @@
         {
             "name": "typewriter",
             "type": "registry:ui",
-            "dependencies": ["clsx"],
+            "registryDependencies": [
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json"
+            ],
             "files": [
                 {
                     "path": "src/components/ui/typewriter/components/typewriter.components.tsx",
@@ -200,28 +261,50 @@
             ]
         },
         {
-            "name": "simpleJsonContext",
+            "name": "advancedJsonContext",
             "type": "registry:item",
             "registryDependencies": [
-                "https://react-chips-and-blocks.netlify.app/components/readJsonFile.json"
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/readJsonFile.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/persistenceTypes.json"
             ],
             "files": [
                 {
-                    "path": "src/contexts/jsonContexts/simple.jsonContexts.tsx",
+                    "path": "src/lib/contexts/jsonContexts/advanced.jsonContexts.tsx",
+                    "type": "registry:item"
+                },
+                {
+                    "path": "src/lib/contexts/jsonContexts/jsonFileError.error.ts",
                     "type": "registry:item"
                 }
             ]
         },
         {
-            "name": "advancedJsonContext",
+            "name": "simpleJsonContext",
             "type": "registry:item",
             "registryDependencies": [
-                "https://react-chips-and-blocks.netlify.app/components/readJsonFile.json"
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/readJsonFile.json",
+
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/persistenceTypes.json"
             ],
             "files": [
                 {
-                    "path": "src/contexts/jsonContexts/advanced.jsonContexts.tsx",
+                    "path": "src/lib/contexts/jsonContexts/simple.jsonContexts.tsx",
                     "type": "registry:item"
+                },
+                {
+                    "path": "src/lib/contexts/jsonContexts/jsonFileError.error.ts",
+                    "type": "registry:item"
+                }
+            ]
+        },
+        {
+            "name": "dismissableLayer",
+            "type": "registry:lib",
+            "files": [
+                {
+                    "path": "src/lib/contexts/reactContexts/dismissal.contexts.tsx",
+                    "type": "registry:lib"
                 }
             ]
         },
@@ -229,7 +312,7 @@
             "name": "useAutoPosition",
             "type": "registry:hook",
             "registryDependencies": [
-                "https://react-chips-and-blocks.netlify.app/components/useWindowSize.json"
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useWindowSize.json"
             ],
             "files": [
                 {
@@ -243,17 +326,21 @@
             "type": "registry:hook",
             "files": [
                 {
-                    "path": "src/hooks/useBodyScrollLock.hooks.ts",
+                    "path": "src/hooks/bodyScrollLock/useBodyScrollLock.hooks.ts",
+                    "type": "registry:hook"
+                },
+                {
+                    "path": "src/hooks/bodyScrollLock/bodyScrollLock.styles.css",
                     "type": "registry:hook"
                 }
             ]
         },
         {
-            "name": "useKeyboardScoped",
+            "name": "useKeyboard",
             "type": "registry:hook",
             "files": [
                 {
-                    "path": "src/hooks/useKeyboardScoped.hooks.ts",
+                    "path": "src/hooks/useKeyboard.hooks.ts",
                     "type": "registry:hook"
                 }
             ]
@@ -265,6 +352,26 @@
                 {
                     "path": "src/hooks/useWindowSize.hooks.ts",
                     "type": "registry:hook"
+                }
+            ]
+        },
+        {
+            "name": "persistenceAdapters",
+            "type": "registry:lib",
+            "files": [
+                {
+                    "path": "src/lib/tools/adapters/persistence.adapters.ts",
+                    "type": "registry:lib"
+                }
+            ]
+        },
+        {
+            "name": "persistenceTypes",
+            "type": "registry:lib",
+            "files": [
+                {
+                    "path": "src/lib/tools/adapters/persistence.types.ts",
+                    "type": "registry:lib"
                 }
             ]
         },
@@ -309,6 +416,16 @@
             ]
         },
         {
+            "name": "getKeyboardNavigateAble",
+            "type": "registry:lib",
+            "files": [
+                {
+                    "path": "src/lib/tools/react/getKeyboardNavigateAble.tools.react.ts",
+                    "type": "registry:lib"
+                }
+            ]
+        },
+        {
             "name": "isElement",
             "type": "registry:lib",
             "files": [
@@ -322,11 +439,32 @@
             "name": "itemsToRender",
             "type": "registry:lib",
             "registryDependencies": [
-                "https://react-chips-and-blocks.netlify.app/components/isElement.json"
+                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/isElement.json"
             ],
             "files": [
                 {
                     "path": "src/lib/tools/react/itemsToRender.tools.react.tsx",
+                    "type": "registry:lib"
+                }
+            ]
+        },
+        {
+            "name": "mergeRefs",
+            "type": "registry:lib",
+            "files": [
+                {
+                    "path": "src/lib/tools/react/mergeRefs.tools.react.ts",
+                    "type": "registry:lib"
+                }
+            ]
+        },
+        {
+            "name": "cnTool",
+            "type": "registry:lib",
+            "dependencies": ["clsx", "tailwind-merge"],
+            "files": [
+                {
+                    "path": "src/lib/tools/cn.tools.ts",
                     "type": "registry:lib"
                 }
             ]

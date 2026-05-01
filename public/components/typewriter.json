@@ -1,8 +1,8 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "typewriter",
-  "dependencies": [
-    "clsx"
+  "registryDependencies": [
+    "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json"
   ],
   "files": [
     {
@@ -12,7 +12,7 @@
     },
     {
       "path": "src/components/ui/typewriter/components/animatedCursor.components.tsx",
-      "content": "import \"@/components/ui/typewriter/css/cursorBlink.typeWriter.css\";\nimport clsx from \"clsx\";\n\ntype AnimatedCursorProps = React.HTMLAttributes<HTMLSpanElement> & {\n    options?: {\n        isBlinking: boolean;\n        isVisible: boolean;\n        cursor: string;\n    };\n};\n\nconst defaultCursorOptions = {\n    isBlinking: true,\n    isVisible: true,\n    cursor: \"|\",\n};\n\n/**\n * Animated cursor component for typewriter effects.\n *\n * @param {Object} options - Cursor animation options\n * @param {React.HTMLAttributes<HTMLSpanElement>} props - Additional HTML span attributes\n *\n * @example\n * <AnimatedCursor cursor=\"_\" isBlinking={true} />\n */\nfunction AnimatedCursor({\n    options = defaultCursorOptions,\n    className,\n    ...props\n}: AnimatedCursorProps) {\n    const { isBlinking, isVisible, cursor } = options;\n    return (\n        <span\n            className={clsx(\n                \"inline-block w-[1ch]\",\n                isBlinking && \"animate-[cursor-blink_1s_steps(1)_infinite]\",\n                !isVisible && \"opacity-0\",\n                className,\n            )}\n            data-blinking={isBlinking}\n            data-visible={isVisible}\n            aria-hidden=\"true\"\n            {...props}\n        >\n            {isVisible ? cursor : \"\"}\n        </span>\n    );\n}\n\nAnimatedCursor.displayName = \"AnimatedCursor\";\n\nexport { type AnimatedCursorProps, AnimatedCursor };\n",
+      "content": "import \"@/components/ui/typewriter/css/cursorBlink.typeWriter.css\";\nimport { cn } from \"@/lib/tools/cn.tools\";\n\ntype AnimatedCursorProps = React.HTMLAttributes<HTMLSpanElement> & {\n    options?: {\n        isBlinking: boolean;\n        isVisible: boolean;\n        cursor: string;\n    };\n};\n\nconst defaultCursorOptions = {\n    isBlinking: true,\n    isVisible: true,\n    cursor: \"|\",\n};\n\n/**\n * Animated cursor component for typewriter effects.\n *\n * @param {Object} options - Cursor animation options\n * @param {React.HTMLAttributes<HTMLSpanElement>} props - Additional HTML span attributes\n *\n * @example\n * <AnimatedCursor cursor=\"_\" isBlinking={true} />\n */\nfunction AnimatedCursor({\n    options = defaultCursorOptions,\n    className,\n    ...props\n}: AnimatedCursorProps) {\n    const { isBlinking, isVisible, cursor } = options;\n    return (\n        <span\n            className={cn(\n                \"inline-block w-[1ch]\",\n                isBlinking && \"animate-[cursor-blink_1s_steps(1)_infinite]\",\n                !isVisible && \"opacity-0\",\n                className,\n            )}\n            data-blinking={isBlinking}\n            data-visible={isVisible}\n            aria-hidden=\"true\"\n            {...props}\n        >\n            {isVisible ? cursor : \"\"}\n        </span>\n    );\n}\n\nAnimatedCursor.displayName = \"AnimatedCursor\";\n\nexport { type AnimatedCursorProps, AnimatedCursor };\n",
       "type": "registry:ui"
     },
     {

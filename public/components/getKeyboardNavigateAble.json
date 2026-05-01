@@ -1,0 +1,12 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "getKeyboardNavigateAble",
+  "files": [
+    {
+      "path": "src/lib/tools/react/getKeyboardNavigateAble.tools.react.ts",
+      "content": "/** Returns all enabled, keyboard-navigable item elements inside a container. */\nexport function getItems(container: HTMLElement | null): HTMLElement[] {\n  if (!container) return [];\n  return Array.from(\n    container.querySelectorAll<HTMLElement>(\n      \"[data-item-id]:not([data-disabled='true'])\",\n    ),\n  );\n}\n",
+      "type": "registry:lib"
+    }
+  ],
+  "type": "registry:lib"
+}

@@ -1,13 +1,13 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "progress",
-  "dependencies": [
-    "clsx"
+  "registryDependencies": [
+    "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json"
   ],
   "files": [
     {
       "path": "src/components/ui/progress/progress.components.tsx",
-      "content": "import clsx from \"clsx\";\nimport { HTMLAttributes } from \"react\";\n\ninterface ProgressProps extends HTMLAttributes<HTMLDivElement> {\n  value: number;\n  max?: number;\n  progressSlider?: HTMLAttributes<HTMLDivElement>;\n  progressBackground?: HTMLAttributes<HTMLDivElement>;\n}\n\nexport default function Prgress({\n  value,\n  max = 100,\n  progressSlider,\n  progressBackground,\n  className,\n  ...props\n}: ProgressProps) {\n  return (\n    <div {...props} className={clsx(\"relative\", className)}>\n      <div\n        {...progressSlider}\n        className={clsx(\n          \"absolute top-0 left-0 h-full bg-blue-500\",\n          progressSlider?.className,\n        )}\n        style={{ width: `${(value / max) * 100}%`, ...progressSlider?.style }}\n      ></div>\n      <div\n        {...progressBackground}\n        className={clsx(\n          \"h-2 w-full bg-gray-200\",\n          progressBackground?.className,\n        )}\n      ></div>\n    </div>\n  );\n}\n",
+      "content": "import { cn } from \"@/lib/tools/cn.tools\";\nimport { HTMLAttributes } from \"react\";\n\ninterface ProgressProps extends HTMLAttributes<HTMLDivElement> {\n  value: number;\n  max?: number;\n  progressSlider?: HTMLAttributes<HTMLDivElement>;\n  progressBackground?: HTMLAttributes<HTMLDivElement>;\n}\n\nexport default function Prgress({\n  value,\n  max = 100,\n  progressSlider,\n  progressBackground,\n  className,\n  ...props\n}: ProgressProps) {\n  return (\n    <div {...props} className={cn(\"relative\", className)}>\n      <div\n        {...progressSlider}\n        className={cn(\n          \"absolute top-0 left-0 h-full bg-blue-500\",\n          progressSlider?.className,\n        )}\n        style={{ width: `${(value / max) * 100}%`, ...progressSlider?.style }}\n      ></div>\n      <div\n        {...progressBackground}\n        className={cn(\"h-2 w-full bg-gray-200\", progressBackground?.className)}\n      ></div>\n    </div>\n  );\n}\n",
       "type": "registry:ui"
     }
   ],
