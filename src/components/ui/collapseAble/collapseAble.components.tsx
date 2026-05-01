@@ -1,7 +1,7 @@
 "use client";
 
-import clsx from "clsx";
 import { CollapseAbleProvider, useCollapseAble } from "./collapseAble.contexts";
+import { cn } from "@/lib/tools/cn.tools";
 
 interface iCollapseAble {
   collapseAbleId: string;
@@ -81,7 +81,7 @@ function CollapseAbleContainer({
 
   return (
     <div
-      className={clsx("w-96 border border-gray-400 rounded-sm p-1", className)}
+      className={cn("w-96 border border-gray-400 rounded-sm p-1", className)}
       {...props}
       data-open={isOpen}
       data-controlled={isControlled}
@@ -118,7 +118,7 @@ function CollapseAbleHeader({
   return (
     <div
       onClick={toggleOpen}
-      className={clsx("w-full h-fit select-none cursor-pointer", className)}
+      className={cn("w-full h-fit select-none cursor-pointer", className)}
       data-open={isOpen}
       data-controlled={isControlled}
       {...props}
@@ -162,7 +162,7 @@ function CollapseAbleContent({
 
   return (
     <div
-      className={clsx(
+      className={cn(
         "w-full transition-all ease-in-out overflow-hidden",
         className,
       )}

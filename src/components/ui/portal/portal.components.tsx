@@ -8,11 +8,10 @@ interface PortalProps {
   children: ReactNode;
   layer: string;
   zIndex?: number;
-  className?: string;
 }
 
-function Portal({ children, layer, zIndex, className }: PortalProps) {
-  const container = usePortalLayer(layer, { zIndex, className });
+function Portal({ children, layer, zIndex }: PortalProps) {
+  const container = usePortalLayer(layer, { zIndex });
   return createPortal(children, container);
 }
 

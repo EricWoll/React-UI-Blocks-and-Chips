@@ -1,8 +1,8 @@
 "use client";
 
-import { useKeyboardScoped } from "@/hooks/useKeyboardScoped.hooks";
-import clsx from "clsx";
+import { useKeyboard } from "@/hooks/useKeyboard.hooks";
 import { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/tools/cn.tools";
 
 export interface AutoCompleteProps {
   onSelect: (result: any) => void;
@@ -64,10 +64,10 @@ export default function AutoComplete({
     }
   }, [value]);
 
-  useKeyboardScoped(
+  useKeyboard(
     [
       {
-        keys: ["Escape"],
+        chord: [{ key: "Escape" }],
         handler: () => {
           setIsOpen(false);
           inputRef.current?.blur();
@@ -76,7 +76,7 @@ export default function AutoComplete({
       },
     ],
     {
-      target: document.body,
+      target: document.body ?? undefined,
       when: isOpen,
     },
   );
@@ -109,15 +109,12 @@ export default function AutoComplete({
   };
 
   return (
-    <div
-      ref={containerRef}
-      className={clsx("relative", options.containerClass)}
-    >
+    <div ref={containerRef} className={cn("relative", options.containerClass)}>
       <input
         ref={inputRef}
         type="text"
         placeholder={options.placeholder}
-        className={clsx("w-full", options.inputClass)}
+        className={cn("w-full", options.inputClass)}
         onFocus={handleFocus}
         onChange={handleChange}
         value={inputValueState}
@@ -126,7 +123,7 @@ export default function AutoComplete({
 
       {isOpen && searchResults.length > 0 && (
         <div
-          className={clsx(
+          className={cn(
             "absolute mt-1 w-full overflow-auto z-50 bg-white",
             options.dropdownContainerClass,
           )}
@@ -136,7 +133,7 @@ export default function AutoComplete({
             <button
               key={index}
               type="button"
-              className={clsx("w-full", options.dropdownItemClass)}
+              className={cn("w-full", options.dropdownItemClass)}
               onClick={(e) => handleSelection(e, result)}
               role="option"
             >

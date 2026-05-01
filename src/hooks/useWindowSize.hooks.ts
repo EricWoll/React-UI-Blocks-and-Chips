@@ -76,13 +76,13 @@ const useIsomorphicLayoutEffect =
  * Returns the current viewport size plus derived helpers. SSR-safe.
  *
  * @example — full size
- * const { value, isMobile, breakpoint } = useWindowSize();
+ * const { wSize, isMobile, breakpoint } = useWindowSize();
  *
  * @example — width only (no re-render on height change)
- * const { value: width } = useWindowSize({ selector: (s) => s.width });
+ * const { wSize: width } = useWindowSize({ selector: (s) => s.width });
  *
  * @example — SSR with assumed dimensions
- * const { value } = useWindowSize({ fallback: { width: 1280, height: 800 } });
+ * const { wSize } = useWindowSize({ fallback: { width: 1280, height: 800 } });
  */
 function useWindowSize<S = WindowSize>(
   options: UseWindowSizeOptions<S> = {},

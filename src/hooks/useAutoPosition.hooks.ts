@@ -6,58 +6,105 @@ import useWindowSize from "@/hooks/useWindowSize.hooks";
 export type Placement = "top" | "bottom" | "left" | "right";
 export type Align = "start" | "center" | "end";
 
-// Maps each placement to its opposite for flip attempts.
-const FLIP_MAP: Record<Placement, Placement> = {
-  bottom: "top",
-  top: "bottom",
-  left: "right",
-  right: "left",
+/**
+ * "fixed"    — positions relative to the viewport. Use with portals or any
+ *              element with `position: fixed`. Coordinates come directly from
+ *              getBoundingClientRect().
+ *
+ * "absolute" — positions relative to the popover's offset parent. Use when
+ *              the popover is rendered inline (not in a portal) inside a
+ *              `position: relative` container. Viewport coords are converted
+ *              into the offset parent's coordinate space.
+ */
+export type PositionStrategy = "fixed" | "absolute";
+
+export type UseAutoPositionOptions = {
+  /**
+   * Where to render the popover relative to the anchor. Accepts either a
+   * single placement or a priority-ordered list.
+   *
+   * When a list is provided, the hook tries each placement in order and uses
+   * the first one that fits in the viewport. If none fit, it falls back to
+   * the first entry (and clamps or closes depending on strategy).
+   *
+   * @example ["bottom", "top"]           // prefer bottom, flip to top
+   * @example ["right", "left", "bottom"]  // right-first with two fallbacks
+   * @default "bottom"
+   */
+  placement?: Placement | Placement[];
+  align?: Align;
+  strategy?: PositionStrategy;
+  /**
+   * Called when the anchor leaves the viewport or there is no room on either
+   * side. Only meaningful for "fixed" strategy — when using "absolute", the
+   * anchor scrolling away is expected behavior and you likely don't want this.
+   */
+  onClose?: () => void;
+  /**
+   * Gap in px between the anchor edge and the popover. Default: 8.
+   */
+  gap?: number;
+  /**
+   * Minimum distance from the viewport edge when clamping. Default: 4.
+   * Only applied for "fixed" strategy.
+   */
+  viewportPadding?: number;
 };
 
 /**
  * useAutoPosition
  *
- * Positions a `position: fixed` popover relative to an anchor element.
+ * Positions a popover relative to an anchor element. Supports both viewport
+ * (fixed) and offset-parent (absolute) coordinate strategies.
  *
- * Supports:
- * - Viewport-based positioning (fixed positioning assumed)
- * - Mobile zoom offset correction (visualViewport) — via useWindowSize
- * - Auto-flip to opposite side before closing when space is constrained
- * - Auto-close when anchor leaves viewport entirely
- * - Auto-close when popover overlaps anchor on both sides (no room anywhere)
- * - Auto-update on scroll, resize, and anchor resize
- * - rAF-throttled updates on resize; synchronous updates on scroll
+ * The popover element must have `position: fixed` when using strategy="fixed",
+ * or `position: absolute` when using strategy="absolute".
  *
- * NOTE: The popover element must use `position: fixed`. Absolute positioning
- * will produce incorrect results since getBoundingClientRect() returns
- * viewport-relative coordinates.
+ * Features:
+ * - Auto-flip to opposite side when the preferred placement doesn't fit
+ * - Auto-close (fixed only) when anchor leaves viewport or no side has room
+ * - Mobile zoom offset correction via visualViewport (fixed only)
+ * - Re-positions on scroll (synchronous, no rAF gap), resize (rAF-throttled),
+ *   and anchor element resize (ResizeObserver)
  */
 export function useAutoPosition(
   anchorRef: React.RefObject<HTMLElement | null>,
   popoverRef: React.RefObject<HTMLDivElement | null>,
-  placement: Placement = "bottom",
-  align: Align = "center",
-  onCloseFunc?: () => void,
+  {
+    placement = ["bottom", "right", "top", "left"],
+    align = "center",
+    strategy = "fixed",
+    onClose,
+    gap = 8,
+    viewportPadding = 4,
+  }: UseAutoPositionOptions = {},
 ) {
-  // useWindowSize gives us rAF-throttled viewport dimensions for resize only.
-  // Scroll is handled separately and synchronously — see SCROLL UPDATES below.
   const { wSize: viewport } = useWindowSize();
 
-  // useLayoutEffect keeps these refs current after every committed render.
-  // This is the concurrent-mode-safe alternative to assigning during render —
-  // React 18 with Suspense data fetching can speculatively render a component
-  // without committing it, so a render-time assignment could briefly hold an
-  // uncommitted value. useLayoutEffect only fires after a committed render,
-  // so .current is always consistent with what's on screen.
+  // Keep mutable options in refs — changes should not cause effect re-runs,
+  // only the next updatePosition call picks them up.
+  const placementRef = useRef(placement);
+  placementRef.current = placement;
+
+  const alignRef = useRef(align);
+  alignRef.current = align;
+
+  const strategyRef = useRef(strategy);
+  strategyRef.current = strategy;
+
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  const gapRef = useRef(gap);
+  gapRef.current = gap;
+
+  const viewportPaddingRef = useRef(viewportPadding);
+  viewportPaddingRef.current = viewportPadding;
+
   const viewportRef = useRef(viewport);
   useLayoutEffect(() => {
     viewportRef.current = viewport;
   }, [viewport]);
-
-  const onCloseRef = useRef(onCloseFunc);
-  useLayoutEffect(() => {
-    onCloseRef.current = onCloseFunc;
-  }, [onCloseFunc]);
 
   const updatePosition = useCallback(() => {
     const anchor = anchorRef.current;
@@ -65,32 +112,34 @@ export function useAutoPosition(
     if (!anchor || !popover) return;
 
     const anchorRect = anchor.getBoundingClientRect();
-    // Read popover size before repositioning — reflects last render's dimensions.
-    // This is acceptable: size is stable once rendered, and we're only adjusting position.
     const popoverRect = popover.getBoundingClientRect();
-
-    // ---------- CLOSE WHEN ANCHOR LEAVES VIEWPORT ----------
-    // Use hook-measured viewport dimensions instead of window.innerWidth/Height
-    // so the check stays consistent with the same source used for clamping below.
     const { width: vWidth, height: vHeight } = viewportRef.current;
+    const currentGap = gapRef.current;
+    const currentPlacement = placementRef.current;
+    const currentAlign = alignRef.current;
+    const currentStrategy = strategyRef.current;
+    const currentPadding = viewportPaddingRef.current;
 
-    const anchorVisible =
-      anchorRect.bottom > 0 &&
-      anchorRect.top < vHeight &&
-      anchorRect.right > 0 &&
-      anchorRect.left < vWidth;
+    // ---------- CLOSE WHEN ANCHOR LEAVES VIEWPORT (fixed only) ----------
+    if (currentStrategy === "fixed") {
+      const anchorVisible =
+        anchorRect.bottom > 0 &&
+        anchorRect.top < vHeight &&
+        anchorRect.right > 0 &&
+        anchorRect.left < vWidth;
 
-    if (!anchorVisible) {
-      onCloseRef.current?.();
-      return;
+      if (!anchorVisible) {
+        onCloseRef.current?.();
+        return;
+      }
     }
 
     // ---------- POSITION CALCULATOR ----------
-    // Extracted so we can call it for both the preferred and flipped placement
-    // without duplicating the switch logic.
+    // All math is done in viewport coordinates first (getBoundingClientRect),
+    // then converted to the offset parent's space if strategy is "absolute".
     const calcPosition = (p: Placement): { top: number; left: number } => {
-      const getHorizontalAlign = () => {
-        switch (align) {
+      const getHorizontalAlign = (): number => {
+        switch (currentAlign) {
           case "start":
             return anchorRect.left;
           case "center":
@@ -102,8 +151,8 @@ export function useAutoPosition(
         }
       };
 
-      const getVerticalAlign = () => {
-        switch (align) {
+      const getVerticalAlign = (): number => {
+        switch (currentAlign) {
           case "start":
             return anchorRect.top;
           case "center":
@@ -117,28 +166,29 @@ export function useAutoPosition(
 
       switch (p) {
         case "bottom":
-          return { top: anchorRect.bottom + 8, left: getHorizontalAlign() };
+          return {
+            top: anchorRect.bottom + currentGap,
+            left: getHorizontalAlign(),
+          };
         case "top":
           return {
-            top: anchorRect.top - popoverRect.height - 8,
+            top: anchorRect.top - popoverRect.height - currentGap,
             left: getHorizontalAlign(),
           };
         case "right":
-          return { top: getVerticalAlign(), left: anchorRect.right + 8 };
+          return {
+            top: getVerticalAlign(),
+            left: anchorRect.right + currentGap,
+          };
         case "left":
           return {
             top: getVerticalAlign(),
-            left: anchorRect.left - popoverRect.width - 8,
+            left: anchorRect.left - popoverRect.width - currentGap,
           };
       }
     };
 
     // ---------- OVERLAP CHECK ----------
-    // Checks whether a popover placed at the *calculated* (top, left) would
-    // overlap the anchor. Uses popoverRect.width/height for the popover's size
-    // since that doesn't change with position, but uses the passed-in top/left
-    // instead of the live DOM position — so this reflects where it *would* land,
-    // not where it currently sits on screen.
     const wouldOverlap = (top: number, left: number): boolean => {
       const right = left + popoverRect.width;
       const bottom = top + popoverRect.height;
@@ -151,98 +201,92 @@ export function useAutoPosition(
     };
 
     // ---------- VIEWPORT FIT CHECK ----------
-    // Checks whether there is enough room in the viewport on the given side
-    // for the popover to fit without overlapping the anchor. Used alongside
-    // wouldOverlap so we correctly distinguish "overlaps anchor" from
-    // "pushed into anchor by the viewport clamp".
     const fitsInViewport = (p: Placement): boolean => {
       switch (p) {
         case "bottom":
-          return anchorRect.bottom + popoverRect.height + 8 <= vHeight;
+          return anchorRect.bottom + popoverRect.height + currentGap <= vHeight;
         case "top":
-          return anchorRect.top - popoverRect.height - 8 >= 0;
+          return anchorRect.top - popoverRect.height - currentGap >= 0;
         case "right":
-          return anchorRect.right + popoverRect.width + 8 <= vWidth;
+          return anchorRect.right + popoverRect.width + currentGap <= vWidth;
         case "left":
-          return anchorRect.left - popoverRect.width - 8 >= 0;
+          return anchorRect.left - popoverRect.width - currentGap >= 0;
       }
     };
 
-    // ---------- FLIP LOGIC ----------
-    // Prefer the requested placement. If it doesn't fit in the viewport on that
-    // side, try the opposite. Only close if neither side has room.
-    // fitsInViewport is used here rather than wouldOverlap because the overlap
-    // check compares calculated coordinates — which can be correct even when the
-    // popover is about to be clamped into the anchor by the viewport boundary.
-    let resolvedPlacement = placement;
+    // ---------- PLACEMENT RESOLUTION ----------
+    // Normalise to an array so single and list placements share one code path.
+    // Try each candidate in order and take the first one that fits. If none
+    // fit, fall back to the first candidate and let the write step clamp/close.
+    const placements = Array.isArray(currentPlacement)
+      ? currentPlacement
+      : [currentPlacement];
 
-    if (!fitsInViewport(placement)) {
-      const flipped = FLIP_MAP[placement];
+    const resolvedPlacement = placements.find(fitsInViewport) ?? placements[0];
 
-      if (!fitsInViewport(flipped)) {
-        // Neither side has room — close.
+    if (!placements.some(fitsInViewport)) {
+      if (currentStrategy === "fixed") {
         onCloseRef.current?.();
         return;
       }
-
-      resolvedPlacement = flipped;
+      // For absolute strategy, fall through and clamp instead of closing.
     }
 
     let { top, left } = calcPosition(resolvedPlacement);
 
-    // Final safety: if after clamping the popover would still overlap the anchor
-    // (e.g. the anchor is very close to a viewport edge and the popover is large),
-    // close rather than render an overlapping popover.
     if (wouldOverlap(top, left)) {
-      onCloseRef.current?.();
+      if (currentStrategy === "fixed") {
+        onCloseRef.current?.();
+        return;
+      }
+      // For absolute, just let it clamp — closing is not our call.
+    }
+
+    // ---------- FIXED: CLAMP TO VIEWPORT + MOBILE ZOOM FIX ----------
+    if (currentStrategy === "fixed") {
+      top = Math.max(
+        currentPadding,
+        Math.min(top, vHeight - popoverRect.height - currentPadding),
+      );
+      left = Math.max(
+        currentPadding,
+        Math.min(left, vWidth - popoverRect.width - currentPadding),
+      );
+
+      // visualViewport offsets correct for pinch-zoom panning on mobile.
+      const vv = window.visualViewport;
+      popover.style.top = `${top + (vv?.offsetTop ?? 0)}px`;
+      popover.style.left = `${left + (vv?.offsetLeft ?? 0)}px`;
       return;
     }
 
-    // ---------- CLAMP TO VIEWPORT ----------
-    // Hook-measured dimensions account for visualViewport on mobile, so the
-    // clamp boundary is correct even during pinch-zoom or with a virtual keyboard open.
-    top = Math.max(4, Math.min(top, vHeight - popoverRect.height - 4));
-    left = Math.max(4, Math.min(left, vWidth - popoverRect.width - 4));
+    // ---------- ABSOLUTE: CONVERT TO OFFSET PARENT SPACE ----------
+    // getBoundingClientRect() gives viewport-relative coords. To get the
+    // correct absolute position we subtract the offset parent's viewport rect,
+    // then add its scroll offset so the value doesn't drift when the container
+    // is scrolled.
+    //
+    // Falls back to documentElement if no offset parent is found (e.g. the
+    // popover is not yet in the DOM or has no positioned ancestor).
+    const offsetParent = (popover.offsetParent ??
+      document.documentElement) as HTMLElement;
+    const parentRect = offsetParent.getBoundingClientRect();
 
-    // ---------- MOBILE ZOOM FIX ----------
-    // visualViewport offsets correct for pinch-zoom panning on mobile.
-    // useWindowSize already reads from visualViewport for dimensions, but the
-    // *offset* (how far the viewport has panned) still needs to be applied here
-    // since it is a positional correction, not a size measurement.
-    // Scroll offsets are intentionally NOT applied — getBoundingClientRect()
-    // already returns viewport-relative coords, and `position: fixed` elements
-    // are positioned relative to the viewport, not the document.
-    const vv = window.visualViewport;
-    popover.style.left = `${left + (vv?.offsetLeft ?? 0)}px`;
-    popover.style.top = `${top + (vv?.offsetTop ?? 0)}px`;
+    popover.style.top = `${top - parentRect.top + offsetParent.scrollTop}px`;
+    popover.style.left = `${left - parentRect.left + offsetParent.scrollLeft}px`;
+  }, [anchorRef, popoverRef]);
+  // All behavioral options are in refs — only the stable ref objects are deps.
 
-    // placement and align are the only true logical dependencies here.
-    // anchorRef/popoverRef are stable refs. viewportRef and onCloseRef are
-    // kept current via useLayoutEffect above.
-  }, [placement, align, anchorRef, popoverRef]);
-
-  // Keep a stable ref to updatePosition so the scroll listener can always
-  // call the latest version without re-registering on every render.
+  // Stable ref so scroll/resize handlers always call the latest version
+  // without needing to re-register.
   const updatePositionRef = useRef(updatePosition);
   useLayoutEffect(() => {
     updatePositionRef.current = updatePosition;
   }, [updatePosition]);
 
-  // ---------- RE-POSITION ON VIEWPORT CHANGE (resize) ----------
-  // viewport changes on rAF-throttled resize events via useWindowSize.
-  // This is the correct update path for resize — rAF throttling is fine
-  // because the user isn't actively scrolling.
-  useEffect(() => {
-    updatePosition();
-  }, [viewport, updatePosition]);
-
-  // ---------- SCROLL UPDATES ----------
-  // Scroll must be synchronous. If we go through React state (via useWindowSize)
-  // or rAF, there is a frame gap between the scroll event and the position write.
-  // During that gap the anchor has moved but the popover hasn't, causing visible
-  // drift. Calling updatePositionRef.current() directly in the event handler
-  // writes style.top/left in the same task as the scroll, eliminating the lag.
-  // Capture phase ensures we catch scroll from any scrollable ancestor.
+  // ---------- SCROLL (synchronous) ----------
+  // Must not go through rAF or React state — any frame gap causes visible
+  // drift between anchor and popover during scroll.
   useEffect(() => {
     const handler = () => updatePositionRef.current();
     window.addEventListener("scroll", handler, {
@@ -250,24 +294,30 @@ export function useAutoPosition(
       capture: true,
     });
     return () => window.removeEventListener("scroll", handler, true);
-  }, []); // empty — handler ref is stable, no need to re-register
+  }, []);
 
-  // ---------- ANCHOR RESIZE OBSERVER ----------
-  // Only observe the anchor — observing the popover too would cause a feedback
-  // loop: updatePosition writes style.left/top → popover reflows → observer
-  // fires → repeat. The popover's size is already read fresh inside
-  // updatePosition via getBoundingClientRect(), so it doesn't need observing.
+  // ---------- RESIZE (rAF-throttled via useWindowSize) ----------
+  // rAF throttle is fine here — the user isn't scrolling, so a frame of lag
+  // is imperceptible. useWindowSize already handles the rAF scheduling.
+  // Skip the initial viewport value (handled by the layout effect below) by
+  // only firing when the value actually changes.
+  const prevViewportRef = useRef(viewport);
+  useEffect(() => {
+    if (prevViewportRef.current === viewport) return;
+    prevViewportRef.current = viewport;
+    updatePositionRef.current();
+  }, [viewport]);
+
+  // ---------- ANCHOR RESIZE ----------
   useLayoutEffect(() => {
     const anchor = anchorRef.current;
     if (!anchor) return;
-
-    const ro = new ResizeObserver(updatePosition);
+    const ro = new ResizeObserver(() => updatePositionRef.current());
     ro.observe(anchor);
-
     return () => ro.disconnect();
-  }, [anchorRef, updatePosition]);
+  }, [anchorRef]);
 
-  // ---------- FIRST RUN ----------
+  // ---------- INITIAL POSITION ----------
   useLayoutEffect(() => {
     updatePosition();
   }, [updatePosition]);

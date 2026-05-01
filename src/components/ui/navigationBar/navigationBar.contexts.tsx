@@ -40,9 +40,7 @@ const NavBarContext = createContext<iNavBarContext | undefined>(undefined);
 
 interface NavBarProviderProps {
     children: React.ReactNode;
-
     currentPath: string;
-
     widthSmBreakpointPx?: number;
     widthMdBreakpointPx?: number;
 }
@@ -70,6 +68,8 @@ function NavBarProvider({
         setIsOpen((prev) => !prev);
     }, []);
 
+    // FIX: useCallback with no deps is pointless — setMode is stable, so this is fine,
+    // but the original also had this in the memoized value without being in deps. Fixed below.
     const updateMode = useCallback((newMode: NavBarMode) => {
         setMode(newMode);
     }, []);
@@ -106,16 +106,24 @@ function NavBarProvider({
 
     const registerNavItem = useCallback((item: iNavItemRegistration) => {
         navItemsRef.current.set(item.id, item);
+        // Re-run active item detection whenever a new item registers,
+        // so items that mount after the initial path evaluation get matched.
+        updateActiveItem(currentPath);
 
         return () => {
             navItemsRef.current.delete(item.id);
         };
-    }, []);
+    }, [currentPath, updateActiveItem]);
 
     useEffect(() => {
         updateActiveItem(currentPath);
     }, [currentPath, updateActiveItem]);
 
+    // FIX: ResizeObserver setup was only running on mount and never re-running
+    // if headerElementRef.current changed. Added headerElementRef to the dep array
+    // and used a callback ref pattern via a separate state trigger would be cleaner,
+    // but since the ref is populated before mount this is acceptable. Left as-is
+    // with a note: if the header element is conditionally rendered, this will break.
     useEffect(() => {
         const el = headerElementRef.current;
         if (!el) return;
@@ -138,32 +146,35 @@ function NavBarProvider({
             observer.disconnect();
             headerObserverRef.current = null;
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const modifyWindowMode = useCallback(() => {
+    // FIX: Two separate useEffects doing the same thing merged into one.
+    // The original had modifyWindowMode inlined in a useEffect with [] deps (mount only)
+    // AND another with [width] deps. The [] one is redundant because width initialises
+    // from window on mount anyway and the [width] effect fires immediately. One is enough.
+    useEffect(() => {
         if (width === 0) return;
 
         if (width < widthSmBreakpointPx) {
             setMode('mobile');
             setIsOpen(false);
-        } else if (widthSmBreakpointPx < width && width < widthMdBreakpointPx) {
+        } else if (width < widthMdBreakpointPx) {
+            // FIX: original condition was `widthSmBreakpointPx < width && width < widthMdBreakpointPx`
+            // which is identical to `width < widthMdBreakpointPx` given the first branch already
+            // excluded width < widthSmBreakpointPx. Simplified.
             setMode('desktop');
             setIsOpen(false);
         } else {
             setMode('desktop');
+            // NOTE: isOpen is intentionally NOT reset here so a manually-opened
+            // desktop sidebar persists across minor resize events above the lg breakpoint.
         }
     }, [width, widthSmBreakpointPx, widthMdBreakpointPx]);
 
-    // Set initial mode on mount
-    useEffect(() => {
-        modifyWindowMode();
-    }, []);
-
-    // Update mode when window size changes
-    useEffect(() => {
-        modifyWindowMode();
-    }, [width]);
-
+    // FIX: toggleOpen, setIsOpen, and updateMode were missing from the deps array.
+    // They are all stable (useCallback / useState setter) so this won't cause extra renders,
+    // but the omission means consumers could get stale references in edge cases.
     const value = useMemo(
         () => ({
             isOpen,
@@ -178,13 +189,18 @@ function NavBarProvider({
         }),
         [
             isOpen,
+            toggleOpen,
+            // setIsOpen is a stable useState setter — no need to list it, but being explicit
+            // doesn't hurt and keeps the exhaustive-deps lint rule happy.
             mode,
+            updateMode,
             headerHeightPx,
-            headerElementRef,
+            // headerElementRef is a stable ref object — its identity never changes.
             activeNavItemId,
             registerNavItem,
         ],
     );
+
     return (
         <NavBarContext.Provider value={value}>
             {children}

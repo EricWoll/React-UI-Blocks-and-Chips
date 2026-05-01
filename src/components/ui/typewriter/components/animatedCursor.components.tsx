@@ -1,5 +1,5 @@
 import "@/components/ui/typewriter/css/cursorBlink.typeWriter.css";
-import clsx from "clsx";
+import { cn } from "@/lib/tools/cn.tools";
 
 type AnimatedCursorProps = React.HTMLAttributes<HTMLSpanElement> & {
     options?: {
@@ -32,7 +32,7 @@ function AnimatedCursor({
     const { isBlinking, isVisible, cursor } = options;
     return (
         <span
-            className={clsx(
+            className={cn(
                 "inline-block w-[1ch]",
                 isBlinking && "animate-[cursor-blink_1s_steps(1)_infinite]",
                 !isVisible && "opacity-0",

@@ -1,30 +1,38 @@
 "use client";
-
-import { useRef, useEffect, HTMLAttributes } from "react";
+import {
+  useRef,
+  useEffect,
+  useCallback,
+  useState,
+  HTMLAttributes,
+  useLayoutEffect,
+} from "react";
 import {
   Align,
   Placement,
   useAutoPosition,
 } from "@/hooks/useAutoPosition.hooks";
 import { Portal } from "@/components/ui/portal/portal.components";
-import clsx from "clsx";
-import { useKeyboardScoped } from "@/hooks/useKeyboardScoped.hooks";
+import { useKeyboard } from "@/hooks/useKeyboard.hooks";
+import { cn } from "@/lib/tools/cn.tools";
+import { useDismissableLayer } from "@/lib/contexts/reactContexts/dismissal.contexts";
 
 interface PopoverProps extends HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   anchorRef: React.RefObject<HTMLElement | null>;
-  open: boolean;
-  setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
-  placement?: Placement;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  placement?: Placement[] | Placement;
   align?: Align;
   layer?: string;
   zIndex?: number;
+  ignoreElementRefs?: React.RefObject<HTMLElement | null>[];
 }
 
 export function Popover({
   anchorRef,
-  open,
-  setOpen,
+  isOpen,
+  onOpenChange,
   placement = "bottom",
   align = "center",
   className,
@@ -32,72 +40,64 @@ export function Popover({
   layer = "popovers",
   zIndex = 300,
   style,
+  ignoreElementRefs,
   ...rest
 }: PopoverProps) {
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  const { updatePosition } = useAutoPosition(
-    anchorRef,
-    popoverRef,
+  const dismiss = useCallback(() => onOpenChange?.(false), [onOpenChange]);
+
+  const { updatePosition } = useAutoPosition(anchorRef, popoverRef, {
     placement,
     align,
-    () => setOpen?.(false),
-  );
+    strategy: "fixed",
+    onClose: dismiss,
+  });
 
-  useKeyboardScoped(
-    [
-      {
-        keys: ["Escape"],
-        handler: () => {
-          setOpen?.(false);
-        },
-      },
+  useKeyboard([{ chord: [{ key: "Escape" }], handler: dismiss }], {
+    target: "global",
+    when: isOpen,
+  });
+
+  const ignoreElementRefsRef = useRef(ignoreElementRefs);
+  useEffect(() => {
+    ignoreElementRefsRef.current = ignoreElementRefs;
+  }, [ignoreElementRefs]);
+
+  const getRoots = useCallback(
+    () => [
+      popoverRef.current,
+      anchorRef.current,
+      ...(ignoreElementRefsRef.current?.map((r) => r.current) ?? []),
     ],
-    { target: document.body, when: open },
+    [],
   );
 
-  useEffect(() => {
-    if (open) updatePosition();
-  }, [open, updatePosition]);
+  useDismissableLayer({
+    enabled: isOpen ?? false,
+    getRoots,
+    onDismiss: dismiss,
+  });
 
-  const handleClickOutside = (e: MouseEvent) => {
-    if (!popoverRef.current?.contains(e.target as Node)) {
-      if (anchorRef.current?.contains(e.target as Node)) return;
-      setOpen?.(false);
-    }
-  };
+  useLayoutEffect(() => {
+    if (isOpen) updatePosition();
+  }, [isOpen, updatePosition]);
 
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [popoverRef]);
-
-  if (!open) return null;
+  if (!isOpen) return null;
 
   return (
     <Portal layer={layer} zIndex={zIndex}>
       <div
-        className="w-screen h-screen fixed inset-0"
-        style={{ pointerEvents: "none" }}
+        ref={popoverRef}
+        className={cn("bg-white border rounded-lg shadow-lg", className)}
+        style={{ ...style, position: "fixed", pointerEvents: "auto" }}
+        data-align={align}
+        {...rest}
       >
-        <div
-          ref={popoverRef}
-          className={clsx("bg-white border rounded-lg shadow-lg", className)}
-          style={{
-            ...style,
-            position: "fixed",
-            pointerEvents: "auto",
-          }}
-          onClick={(e) => {}}
-          data-align={align}
-          {...rest}
-        >
-          {children}
-        </div>
+        {children}
       </div>
     </Portal>
   );
 }
+
 Popover.displayName = "Popover";

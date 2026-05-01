@@ -1,11 +1,11 @@
 "use client";
 
-import clsx from "clsx";
 import { DialogProvider, useDialog } from "./dialog.contexts";
 import { useCallback } from "react";
 import { Portal } from "@/components/ui/portal/portal.components";
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock.hooks";
-import { useKeyboardScoped } from "@/hooks/useKeyboardScoped.hooks";
+import { useBodyScrollLock } from "@/hooks/bodyScrollLock/useBodyScrollLock.hooks";
+import { useKeyboard } from "@/hooks/useKeyboard.hooks";
+import { cn } from "@/lib/tools/cn.tools";
 
 interface DialogProps {
     children: React.ReactNode;
@@ -114,15 +114,15 @@ function DialogContent({
         }
     }, [isControlled, controlledOutsideClick, setIsOpen]);
 
-    useKeyboardScoped(
+    useKeyboard(
         [
             {
-                keys: ["Escape"],
+                chord: [{ key: "Escape" }],
                 handler: disableEscapeKey ? () => {} : handleOutsideClick,
             },
         ],
         {
-            target: document.body ?? null,
+            target: document.body ?? undefined,
             when: isOpen,
         },
     );
@@ -132,7 +132,7 @@ function DialogContent({
     return (
         <Portal layer="Dialog" zIndex={1000}>
             <div
-                className={clsx(
+                className={cn(
                     "fixed inset-0 bg-black/50 w-screen h-screen flex justify-center items-center z-100",
                     windowContainerClasssName,
                 )}
@@ -141,7 +141,7 @@ function DialogContent({
                 style={{ pointerEvents: "auto" }}
             >
                 <div
-                    className={clsx(
+                    className={cn(
                         "w-150 h-120 bg-white z-102 overflow-y-auto",
                         className,
                     )}
@@ -215,7 +215,7 @@ function DialogButton({
             {...props}
             disabled={!ignoreDialogDisable && (disabled || dialogIsDisabled)}
             onClick={handleClick}
-            className={clsx("select-none cursor-pointer", className)}
+            className={cn("select-none cursor-pointer", className)}
             data-variant={trigger}
             data-open={isOpen}
         >
@@ -243,7 +243,7 @@ function DialogHeader({
     return (
         <div
             {...containerProps}
-            className={clsx(
+            className={cn(
                 "flex flex-nowrap justify-between items-center select-none",
                 containerProps?.className,
             )}
@@ -252,7 +252,7 @@ function DialogHeader({
             <DialogButton
                 {...buttonProps}
                 trigger="close"
-                className={clsx(
+                className={cn(
                     "hover:bg-gray-200 p-1 rounded",
                     buttonProps?.className,
                 )}

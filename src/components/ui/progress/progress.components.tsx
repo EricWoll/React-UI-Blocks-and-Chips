@@ -1,4 +1,4 @@
-import clsx from "clsx";
+import { cn } from "@/lib/tools/cn.tools";
 import { HTMLAttributes } from "react";
 
 interface ProgressProps extends HTMLAttributes<HTMLDivElement> {
@@ -17,10 +17,10 @@ export default function Prgress({
   ...props
 }: ProgressProps) {
   return (
-    <div {...props} className={clsx("relative", className)}>
+    <div {...props} className={cn("relative", className)}>
       <div
         {...progressSlider}
-        className={clsx(
+        className={cn(
           "absolute top-0 left-0 h-full bg-blue-500",
           progressSlider?.className,
         )}
@@ -28,10 +28,7 @@ export default function Prgress({
       ></div>
       <div
         {...progressBackground}
-        className={clsx(
-          "h-2 w-full bg-gray-200",
-          progressBackground?.className,
-        )}
+        className={cn("h-2 w-full bg-gray-200", progressBackground?.className)}
       ></div>
     </div>
   );
