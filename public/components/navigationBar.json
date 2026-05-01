@@ -2,9 +2,9 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "navigationBar",
   "registryDependencies": [
-    "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json",
-    "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/drawer.json",
-    "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useWindowSize.json"
+    "https://react-chips-and-blocks.netlify.app/components/cnTool.json",
+    "https://react-chips-and-blocks.netlify.app/components/drawer.json",
+    "https://react-chips-and-blocks.netlify.app/components/useWindowSize.json"
   ],
   "files": [
     {

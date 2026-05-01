@@ -7,13 +7,13 @@
             "name": "accordion",
             "type": "registry:ui",
             "registryDependencies": [
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/collapseAble.json",
+                "https://react-chips-and-blocks.netlify.app/components/collapseAble.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/itemsToRender.json",
+                "https://react-chips-and-blocks.netlify.app/components/itemsToRender.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/isElement.json",
+                "https://react-chips-and-blocks.netlify.app/components/isElement.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/composeEventHandler.json"
+                "https://react-chips-and-blocks.netlify.app/components/composeEventHandler.json"
             ],
             "files": [
                 {
@@ -26,9 +26,9 @@
             "name": "autoComplete",
             "type": "registry:ui",
             "registryDependencies": [
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useKeyboard.json",
+                "https://react-chips-and-blocks.netlify.app/components/useKeyboard.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json"
+                "https://react-chips-and-blocks.netlify.app/components/cnTool.json"
             ],
             "files": [
                 {
@@ -41,9 +41,9 @@
             "name": "collapseAble",
             "type": "registry:ui",
             "registryDependencies": [
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json",
+                "https://react-chips-and-blocks.netlify.app/components/cnTool.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/createId.json"
+                "https://react-chips-and-blocks.netlify.app/components/createId.json"
             ],
             "files": [
                 {
@@ -60,15 +60,15 @@
             "name": "dialog",
             "type": "registry:ui",
             "registryDependencies": [
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/portal.json",
+                "https://react-chips-and-blocks.netlify.app/components/portal.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useBodyScrollLock.json",
+                "https://react-chips-and-blocks.netlify.app/components/useBodyScrollLock.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useKeyboard.json",
+                "https://react-chips-and-blocks.netlify.app/components/useKeyboard.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json",
+                "https://react-chips-and-blocks.netlify.app/components/cnTool.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/createId.json"
+                "https://react-chips-and-blocks.netlify.app/components/createId.json"
             ],
             "files": [
                 {
@@ -85,9 +85,9 @@
             "name": "drawer",
             "type": "registry:ui",
             "registryDependencies": [
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json",
+                "https://react-chips-and-blocks.netlify.app/components/cnTool.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/portal.json"
+                "https://react-chips-and-blocks.netlify.app/components/portal.json"
             ],
             "files": [
                 {
@@ -100,17 +100,17 @@
             "name": "dropdown",
             "type": "registry:ui",
             "registryDependencies": [
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/portal.json",
+                "https://react-chips-and-blocks.netlify.app/components/portal.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json",
+                "https://react-chips-and-blocks.netlify.app/components/cnTool.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useAutoPosition.json",
+                "https://react-chips-and-blocks.netlify.app/components/useAutoPosition.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/mergeRefs.json",
+                "https://react-chips-and-blocks.netlify.app/components/mergeRefs.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/getKeyboardNavigateAble.json",
+                "https://react-chips-and-blocks.netlify.app/components/getKeyboardNavigateAble.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/dismissableLayer.json"
+                "https://react-chips-and-blocks.netlify.app/components/dismissableLayer.json"
             ],
             "files": [
                 {
@@ -127,11 +127,11 @@
             "name": "navigationBar",
             "type": "registry:ui",
             "registryDependencies": [
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json",
+                "https://react-chips-and-blocks.netlify.app/components/cnTool.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/drawer.json",
+                "https://react-chips-and-blocks.netlify.app/components/drawer.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useWindowSize.json"
+                "https://react-chips-and-blocks.netlify.app/components/useWindowSize.json"
             ],
             "files": [
                 {
@@ -148,15 +148,15 @@
             "name": "popover",
             "type": "registry:ui",
             "registryDependencies": [
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useAutoPosition.json",
+                "https://react-chips-and-blocks.netlify.app/components/useAutoPosition.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/portal.json",
+                "https://react-chips-and-blocks.netlify.app/components/portal.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useKeyboard.json",
+                "https://react-chips-and-blocks.netlify.app/components/useKeyboard.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json",
+                "https://react-chips-and-blocks.netlify.app/components/cnTool.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/dismissableLayer.json"
+                "https://react-chips-and-blocks.netlify.app/components/dismissableLayer.json"
             ],
             "files": [
                 {
@@ -183,7 +183,7 @@
             "name": "progress",
             "type": "registry:ui",
             "registryDependencies": [
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json"
+                "https://react-chips-and-blocks.netlify.app/components/cnTool.json"
             ],
             "files": [
                 {
@@ -207,9 +207,9 @@
             "name": "select",
             "type": "registry:ui",
             "registryDependencies": [
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/dropdown.json",
+                "https://react-chips-and-blocks.netlify.app/components/dropdown.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json"
+                "https://react-chips-and-blocks.netlify.app/components/cnTool.json"
             ],
             "files": [
                 {
@@ -226,7 +226,7 @@
             "name": "tabs",
             "type": "registry:ui",
             "registryDependencies": [
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/itemsToRender.json"
+                "https://react-chips-and-blocks.netlify.app/components/itemsToRender.json"
             ],
             "files": [
                 {
@@ -239,7 +239,7 @@
             "name": "typewriter",
             "type": "registry:ui",
             "registryDependencies": [
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/cnTool.json"
+                "https://react-chips-and-blocks.netlify.app/components/cnTool.json"
             ],
             "files": [
                 {
@@ -264,9 +264,9 @@
             "name": "advancedJsonContext",
             "type": "registry:item",
             "registryDependencies": [
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/readJsonFile.json",
+                "https://react-chips-and-blocks.netlify.app/components/readJsonFile.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/persistenceTypes.json"
+                "https://react-chips-and-blocks.netlify.app/components/persistenceTypes.json"
             ],
             "files": [
                 {
@@ -283,9 +283,9 @@
             "name": "simpleJsonContext",
             "type": "registry:item",
             "registryDependencies": [
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/readJsonFile.json",
+                "https://react-chips-and-blocks.netlify.app/components/readJsonFile.json",
 
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/persistenceTypes.json"
+                "https://react-chips-and-blocks.netlify.app/components/persistenceTypes.json"
             ],
             "files": [
                 {
@@ -312,7 +312,7 @@
             "name": "useAutoPosition",
             "type": "registry:hook",
             "registryDependencies": [
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/useWindowSize.json"
+                "https://react-chips-and-blocks.netlify.app/components/useWindowSize.json"
             ],
             "files": [
                 {
@@ -439,7 +439,7 @@
             "name": "itemsToRender",
             "type": "registry:lib",
             "registryDependencies": [
-                "https://2e7afd31-49b5-4b54-bda4-ff3409f4bf10-00-23mxre3l3d6qg.spock.replit.dev/components/isElement.json"
+                "https://react-chips-and-blocks.netlify.app/components/isElement.json"
             ],
             "files": [
                 {
