@@ -1,38 +1,36 @@
-
 /* 
   REQUIRED SETUP
   Import this file once in your app's base react file:
 
-  import "@/styles/scroll-container.css";
+  import "@/hooks/bodyScrollLock/bodyScrollLock.styles.css";
 */
 
-
-
-/* ------------------------------------------------------------------
-   Root layout setup
-   ------------------------------------------------------------------ */
-
-html {
+html,
+body {
   height: 100%;
 }
 
 body {
-  height: 100%;
   margin: 0;
-  padding: 0;
-
-  overflow: hidden;
+  overflow: hidden; /* prevent body scroll */
 }
-
-/* ------------------------------------------------------------------
-   React root container (ONLY scroll container)
-   ------------------------------------------------------------------ */
 
 #root {
   height: 100%;
   width: 100%;
 
+  overflow-y: auto;   /* main scroll container */
+  overflow-x: hidden; /* prevent horizontal drift */
+  overscroll-behavior: none; /* Prevent Scroll Chaining */
+}
+
+.modal,
+.drawer {
+  overscroll-behavior: contain;
+}
+
+/* For iOS */
+.scrollable {
   overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
 }

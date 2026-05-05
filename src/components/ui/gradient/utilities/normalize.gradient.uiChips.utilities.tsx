@@ -6,7 +6,7 @@ import {
     CustomAnimationConfig,
     ShapeAnimation,
     AnimationDescriptor,
-} from '@/components/ui/gradient/types/gradient.uiChips.types';
+} from '../types/gradient.uiChips.types';
 import {
     buildPanKeyframes,
     buildHueKeyframes,
@@ -14,11 +14,11 @@ import {
     buildRotateKeyframes,
     buildBlobMorphKeyframes,
     buildSquiggleKeyframes,
-} from '@/components/ui/gradient/utilities/animations.gradient.uiChips.utilities';
+} from '../utilities/animations.gradient.uiChips.utilities';
 import {
     injectCSSOnce,
     uniqueName,
-} from '@/components/ui/gradient/components/gradient.uiChips.components';
+} from '../components/gradient.uiChips.components';
 
 function normalizeAnimations(
     animations: AnimatedGradientProps['animations'],

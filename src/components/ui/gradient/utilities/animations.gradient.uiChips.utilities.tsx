@@ -1,8 +1,8 @@
 import {
     AnimationDescriptor,
     BuiltInAnimationConfig,
-} from '@/components/ui/gradient/types/gradient.uiChips.types';
-import { uniqueName } from '@/components/ui/gradient/components/gradient.uiChips.components';
+} from '../types/gradient.uiChips.types';
+import { uniqueName } from '../components/gradient.uiChips.components';
 
 // Moves gradient around
 function buildPanKeyframes(

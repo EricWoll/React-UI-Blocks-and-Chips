@@ -5,7 +5,7 @@ import {
     waveSvg,
     circleCutoutSvg,
     diagonalStripesSvg,
-} from '@/components/ui/gradient/svgs/shapeSvgs.gradient.uiChips.svgs';
+} from '../svgs/shapeSvgs.gradient.uiChips.svgs';
 
 function svgDataUri(svg: string) {
     // encode minimal for inline usage

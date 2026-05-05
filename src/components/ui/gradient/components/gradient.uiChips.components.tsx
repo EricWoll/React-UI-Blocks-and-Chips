@@ -3,17 +3,17 @@ import {
     ShapeDef,
     CustomShape,
     ShapePreset,
-} from '@/components/ui/gradient/types/gradient.uiChips.types';
-import { SHAPES } from '@/components/ui/gradient/components/shapes.gradient.uiChips.components';
+} from '../types/gradient.uiChips.types';
+import { SHAPES } from './shapes.gradient.uiChips.components';
 import {
     normalizeAnimations,
     toAnimationCSS,
-} from '@/components/ui/gradient/utilities/normalize.gradient.uiChips.utilities';
+} from '../utilities/normalize.gradient.uiChips.utilities';
 import {
     isValidHex,
     stopsFromHex,
-} from '@/components/ui/gradient/utilities/color.gradient.uiChips.utilities';
-import usePrefersReducedMotion from '@/components/ui/gradient/hooks/usePrefersReducedMotion.gradient.uiChips.hooks';
+} from '../utilities/color.gradient.uiChips.utilities';
+import usePrefersReducedMotion from '../hooks/usePrefersReducedMotion.gradient.uiChips.hooks';
 import { useEffect, useMemo } from 'react';
 import clsx from 'clsx';
 

@@ -2,76 +2,31 @@
 // Types
 // ---------------------------------------------------------------------------
 
-/**
- * A key definition with an optional relevance weight multiplier.
- * Use a plain string for weight=1, or an object to boost/dampen a key.
- */
 export type KeyDefinition<T> =
     | keyof T
-    | { key: keyof T; weight: number };
+    | { key: keyof T | string; weight: number };
 
-/**
- * Controls how string values are compared against a string query.
- * "partial"            – case-insensitive substring match (default)
- * "exact"              – strict equality
- * "partial-sensitive"  – case-SENSITIVE substring match
- *
- * When the query is a RegExp, matchType is ignored; the regexp is used directly.
- * When the query is a number, matchType is ignored; strict equality is used.
- */
 export type MatchType = "partial" | "exact" | "partial-sensitive";
 
 export interface SearchOptions<T> {
-    /**
-     * Restrict the search to these keys only. Defaults to all own top-level keys.
-     * Each entry may be:
-     *   - a plain key:                  "name"
-     *   - a dot-notation path:          "address.city"
-     *   - a weighted key definition:    { key: "name", weight: 2 }
-     *   - a weighted path definition:   { key: "address.city", weight: 1.5 }
-     */
     keys?: ReadonlyArray<KeyDefinition<T> | string>;
     matchType?: MatchType;
-    /**
-     * Sort results by relevance score descending before returning.
-     * Defaults to true. Set to false to preserve original array order.
-     */
     sortByScore?: boolean;
-    /**
-     * One or more queries. When multiple are supplied, a result must satisfy
-     * AT LEAST ONE (OR logic). Scores are summed across all queries that match,
-     * so items matching more queries rank higher.
-     * When provided, the top-level `query` argument is ignored.
-     */
     queries?: ReadonlyArray<string | number | RegExp>;
-    /**
-     * Maximum number of results to return. Applied after sorting.
-     * Omit or set to 0 for no limit.
-     */
     limit?: number;
-    /**
-     * Number of results to skip before returning. Applied after sorting.
-     * Use together with `limit` for pagination. Defaults to 0.
-     */
     offset?: number;
 }
 
-/** A single match: the dot-notation path to the key, the matched value, and its score. */
 export interface SearchMatch {
-    /** Dot-notation path to the matched key (e.g. "address.city"). */
     key: string;
     value: unknown;
-    /** Relevance score for this individual match, after weight is applied. */
     score: number;
 }
 
-/** A single search result. */
 export interface SearchResult<T> {
-    /** Original array index as a string. */
     path: string;
     value: T;
     matches: SearchMatch[];
-    /** Aggregate relevance score across all matches and all queries. Higher is better. */
     score: number;
 }
 
@@ -79,31 +34,21 @@ export interface SearchResult<T> {
 // Scoring constants
 // ---------------------------------------------------------------------------
 
-/** A string value is an exact, case-sensitive match for the query. */
 const SCORE_EXACT = 100;
-/** A string value starts with the query (case-insensitive). */
 const SCORE_PREFIX = 60;
-/** A string value contains the query somewhere in the middle (case-insensitive). */
 const SCORE_SUBSTRING = 30;
-/** Case-sensitive substring match (not a prefix, not exact). */
 const SCORE_SUBSTRING_SENSITIVE = 40;
-/** A RegExp test passed. */
 const SCORE_REGEX = 50;
-/** A number value matches exactly. */
 const SCORE_NUMBER = 100;
 
 // ---------------------------------------------------------------------------
-// Internal helpers
+// Helpers
 // ---------------------------------------------------------------------------
 
 function isNonNull<T>(value: T | null): value is T {
     return value !== null;
 }
 
-/**
- * Resolve a dot-notation path against an object.
- * Returns `undefined` when any segment along the path is absent.
- */
 function resolvePath(obj: unknown, path: string): unknown {
     return path.split(".").reduce<unknown>((current, segment) => {
         if (current === null || typeof current !== "object") return undefined;
@@ -111,25 +56,22 @@ function resolvePath(obj: unknown, path: string): unknown {
     }, obj);
 }
 
-/**
- * Collect all primitive leaf values (strings, numbers, booleans) from a value,
- * including recursing into plain objects and flattening arrays.
- * Returns an array of [dotPath, primitiveValue] pairs.
- */
 function collectLeaves(
     value: unknown,
     prefix: string = "",
-): Array<[path: string, value: string | number | boolean]> {
+): Array<[string, string | number | boolean]> {
     if (Array.isArray(value)) {
         return value.flatMap((item, i) =>
             collectLeaves(item, prefix ? `${prefix}.${i}` : String(i)),
         );
     }
+
     if (value !== null && typeof value === "object") {
         return Object.entries(value as Record<string, unknown>).flatMap(
             ([k, v]) => collectLeaves(v, prefix ? `${prefix}.${k}` : k),
         );
     }
+
     if (
         typeof value === "string" ||
         typeof value === "number" ||
@@ -137,182 +79,99 @@ function collectLeaves(
     ) {
         return [[prefix, value]];
     }
+
     return [];
 }
 
-/**
- * Score a single primitive value against a single query.
- * Returns 0 when the value does not match.
- */
-function scoreValue(
+// ---------------------------------------------------------------------------
+// Cached leaf extraction (BIG WIN)
+// ---------------------------------------------------------------------------
+
+const leafCache = new WeakMap<
+    object,
+    Array<[string, string | number | boolean]>
+>();
+
+function getCachedLeaves(
+    obj: object,
+): Array<[string, string | number | boolean]> {
+    let cached = leafCache.get(obj);
+    if (!cached) {
+        cached = collectLeaves(obj);
+        leafCache.set(obj, cached);
+    }
+    return cached;
+}
+
+// ---------------------------------------------------------------------------
+// Faster scoring
+// ---------------------------------------------------------------------------
+
+function scoreValueFast(
     value: unknown,
-    query: string | number | RegExp,
+    query: any,
     matchType: MatchType,
 ): number {
-    if (query instanceof RegExp) {
-        return typeof value === "string" && query.test(value) ? SCORE_REGEX : 0;
-    }
-
-    if (typeof query === "number") {
-        return value === query ? SCORE_NUMBER : 0;
-    }
-
-    // String query from here on.
-    if (typeof value === "number" || typeof value === "boolean") {
-        // Allow matching numbers/booleans by their string representation in partial mode.
-        if (matchType === "exact") return String(value) === query ? SCORE_EXACT : 0;
-        return String(value).toLowerCase().includes(query.toLowerCase())
-            ? SCORE_SUBSTRING
+    // regex
+    if (query.type === "regex") {
+        return typeof value === "string" && query.raw.test(value)
+            ? SCORE_REGEX
             : 0;
+    }
+
+    // number
+    if (query.type === "number") {
+        return value === query.raw ? SCORE_NUMBER : 0;
+    }
+
+    // string
+    const q = query.normalized;
+
+    if (typeof value === "number" || typeof value === "boolean") {
+        const val = String(value).toLowerCase();
+        return val.includes(q) ? SCORE_SUBSTRING : 0;
     }
 
     if (typeof value !== "string") return 0;
 
     if (matchType === "exact") {
-        return value === query ? SCORE_EXACT : 0;
+        return value === query.raw ? SCORE_EXACT : 0;
     }
 
     if (matchType === "partial-sensitive") {
-        if (value === query) return SCORE_EXACT;
-        if (value.startsWith(query)) return SCORE_PREFIX;
-        if (value.includes(query)) return SCORE_SUBSTRING_SENSITIVE;
+        if (value === query.raw) return SCORE_EXACT;
+        if (value.startsWith(query.raw)) return SCORE_PREFIX;
+        if (value.includes(query.raw)) return SCORE_SUBSTRING_SENSITIVE;
         return 0;
     }
 
-    // partial (default) — case-insensitive, rank by match position.
-    const normVal = value.toLowerCase();
-    const normQuery = query.toLowerCase();
+    const val = value.toLowerCase();
 
-    if (normVal === normQuery) return SCORE_EXACT;
-    if (normVal.startsWith(normQuery)) return SCORE_PREFIX;
-    if (normVal.includes(normQuery)) return SCORE_SUBSTRING;
+    if (val === q) return SCORE_EXACT;
+    if (val.startsWith(q)) return SCORE_PREFIX;
+    if (val.includes(q)) return SCORE_SUBSTRING;
 
     return 0;
 }
+
+// ---------------------------------------------------------------------------
 
 interface ResolvedKey {
     path: string;
     weight: number;
 }
 
-/**
- * Normalise a raw key definition (plain string, keyof T, or weighted object)
- * into a uniform { path, weight } shape.
- */
 function resolveKeyDefinition<T>(def: KeyDefinition<T> | string): ResolvedKey {
     if (typeof def === "object" && def !== null && "key" in def) {
-        const d = def as { key: keyof T | string; weight: number };
-        return { path: String(d.key), weight: d.weight };
+        return { path: String(def.key), weight: def.weight };
     }
     return { path: String(def), weight: 1 };
 }
 
-/**
- * Score an item against a single query across the specified key paths.
- * Returns an array of SearchMatch (may be empty).
- */
-function scoreItemAgainstQuery<T extends Record<string, unknown>>(
-    item: T,
-    query: string | number | RegExp,
-    matchType: MatchType,
-    resolvedKeys: ResolvedKey[] | null, // null = search all leaves
-): SearchMatch[] {
-    const hits: SearchMatch[] = [];
-
-    if (resolvedKeys === null) {
-        // Deep search: walk every leaf of the item.
-        for (const [leafPath, leafValue] of collectLeaves(item)) {
-            const raw = scoreValue(leafValue, query, matchType);
-            if (raw > 0) hits.push({ key: leafPath, value: leafValue, score: raw });
-        }
-    } else {
-        for (const { path, weight } of resolvedKeys) {
-            const resolved = resolvePath(item, path);
-
-            // The resolved value might itself be an array or nested object —
-            // flatten to leaves and take the highest-scoring leaf.
-            const leaves = collectLeaves(resolved, path);
-
-            if (leaves.length === 0) {
-                // Scalar-ish (null, undefined, object with no primitives) — skip.
-                continue;
-            }
-
-            let best = 0;
-            let bestValue: unknown = undefined;
-
-            for (const [, leafValue] of leaves) {
-                const raw = scoreValue(leafValue, query, matchType);
-                if (raw > best) {
-                    best = raw;
-                    bestValue = leafValue;
-                }
-            }
-
-            if (best > 0) {
-                hits.push({ key: path, value: bestValue, score: best * weight });
-            }
-        }
-    }
-
-    return hits;
-}
-
 // ---------------------------------------------------------------------------
-// Public API
+// MAIN
 // ---------------------------------------------------------------------------
 
-/**
- * Search through a JSON array for all objects that match one or more queries.
- *
- * Features:
- * - Dot-notation key paths for nested objects  ("address.city")
- * - Per-key score weight                       ({ key: "name", weight: 2 })
- * - Array field support                        (any matching element scores the key)
- * - Multiple queries with OR logic             (options.queries)
- * - Case-sensitive partial matching            (matchType: "partial-sensitive")
- * - Pagination                                 (limit / offset)
- * - Relevance-sorted results (default on)      (sortByScore: false to disable)
- *
- * Pass an empty string as the query to return every object ("all" search).
- * All-search results score 0 and are returned in original order regardless of sortByScore.
- *
- * Scoring heuristics for string queries (before weight is applied):
- *   Exact match (case-sensitive)            100
- *   Prefix match (case-insensitive)          60
- *   Case-sensitive substring match           40
- *   Regex match                              50
- *   Substring match (case-insensitive)       30
- *   Number / boolean coerced substring       30
- *   Number exact match                      100
- *
- * @param data      - Array of objects to search.
- * @param query     - String, number, or RegExp to match against.
- *                    Ignored when options.queries is supplied.
- * @param options   - Optional search configuration.
- * @returns         Array of SearchResult, sorted by score descending by default.
- *
- * @example
- * // Simple partial search
- * searchJsonAdvanced(users, "alice", { keys: ["name"] });
- *
- * @example
- * // Weighted keys + nested path
- * searchJsonAdvanced(users, "london", {
- *   keys: [{ key: "name", weight: 2 }, "address.city"],
- * });
- *
- * @example
- * // OR across multiple queries
- * searchJsonAdvanced(products, "", {
- *   queries: ["shirt", "hoodie"],
- *   keys: ["name", "category"],
- * });
- *
- * @example
- * // Paginated results
- * searchJsonAdvanced(articles, "typescript", { limit: 10, offset: 20 });
- */
 function searchJsonAdvanced<T extends Record<string, unknown>>(
     data: ReadonlyArray<T>,
     query: string | number | RegExp,
@@ -327,40 +186,102 @@ function searchJsonAdvanced<T extends Record<string, unknown>>(
         offset = 0,
     } = options;
 
-    // Normalise the effective query list.
-    const effectiveQueries: ReadonlyArray<string | number | RegExp> =
-        multiQueries && multiQueries.length > 0 ? multiQueries : [query];
+    const effectiveQueries = (
+        multiQueries && multiQueries.length > 0 ? multiQueries : [query]
+    ).map((q) => {
+        if (typeof q === "string") {
+            return {
+                raw: q,
+                normalized: q.toLowerCase(),
+                type: "string" as const,
+            };
+        }
 
-    // Pre-resolve key definitions once, outside the per-item loop.
+        if (typeof q === "number") {
+            return { raw: q, type: "number" as const };
+        }
+
+        return {
+            raw: new RegExp(q.source, q.flags.replace("g", "")),
+            type: "regex" as const,
+        };
+    });
+
     const resolvedKeys: ResolvedKey[] | null =
-        keys && keys.length > 0
-            ? (keys as ReadonlyArray<KeyDefinition<T> | string>).map(resolveKeyDefinition)
-            : null;
+        keys && keys.length > 0 ? keys.map(resolveKeyDefinition) : null;
 
-    // Determine whether every effective query is an "all" search.
     const isAllSearch = effectiveQueries.every(
-        (q) => typeof q === "string" && q.trim() === "",
+        (q) => q.type === "string" && q.raw.trim() === "",
     );
 
     const results = data
         .map((item, index): SearchResult<T> | null => {
             if (isAllSearch) {
-                return { path: String(index), value: item, matches: [], score: 0 };
+                return {
+                    path: String(index),
+                    value: item,
+                    matches: [],
+                    score: 0,
+                };
             }
 
-            // Accumulate hits across all queries (OR logic, scores summed).
             const allHits: SearchMatch[] = [];
 
             for (const q of effectiveQueries) {
-                const hits = scoreItemAgainstQuery(item, q, matchType, resolvedKeys);
-                allHits.push(...hits);
+                if (resolvedKeys === null) {
+                    const leaves =
+                        typeof item === "object"
+                            ? getCachedLeaves(item)
+                            : collectLeaves(item);
+
+                    for (const [leafPath, leafValue] of leaves) {
+                        const score = scoreValueFast(leafValue, q, matchType);
+                        if (score > 0) {
+                            allHits.push({
+                                key: leafPath,
+                                value: leafValue,
+                                score,
+                            });
+                        }
+                    }
+                } else {
+                    for (const { path, weight } of resolvedKeys) {
+                        const resolved = resolvePath(item, path);
+                        if (resolved == null) continue;
+
+                        const leaves =
+                            typeof resolved === "object"
+                                ? getCachedLeaves(resolved)
+                                : collectLeaves({ value: resolved });
+
+                        let best = 0;
+                        let bestValue: unknown;
+
+                        for (const [, leafValue] of leaves) {
+                            const score = scoreValueFast(
+                                leafValue,
+                                q,
+                                matchType,
+                            );
+                            if (score > best) {
+                                best = score;
+                                bestValue = leafValue;
+                            }
+                        }
+
+                        if (best > 0) {
+                            allHits.push({
+                                key: path,
+                                value: bestValue,
+                                score: best * weight,
+                            });
+                        }
+                    }
+                }
             }
 
             if (allHits.length === 0) return null;
 
-            // Merge duplicate key entries (same key hit by multiple queries):
-            // keep the entry with the highest score for display, but sum all
-            // scores for the aggregate to reward multi-query matches.
             const byKey = new Map<string, SearchMatch>();
             let totalScore = 0;
 
@@ -381,16 +302,14 @@ function searchJsonAdvanced<T extends Record<string, unknown>>(
         })
         .filter(isNonNull);
 
-    // Sort — stable: equal scores preserve original input order.
     const sorted =
         isAllSearch || !sortByScore
             ? results
             : results
-                  .map((result, i) => ({ result, i }))
-                  .sort((a, b) => b.result.score - a.result.score || a.i - b.i)
-                  .map(({ result }) => result);
+                  .map((r, i) => ({ r, i }))
+                  .sort((a, b) => b.r.score - a.r.score || a.i - b.i)
+                  .map(({ r }) => r);
 
-    // Paginate.
     const start = Math.max(0, offset);
     return limit > 0 ? sorted.slice(start, start + limit) : sorted.slice(start);
 }
