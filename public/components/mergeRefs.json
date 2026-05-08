@@ -4,7 +4,7 @@
   "files": [
     {
       "path": "src/lib/tools/react/mergeRefs.tools.react.ts",
-      "content": "import { Ref } from \"react\";\n/**\n * Merges multiple refs onto one callback ref.\n * Avoids losing the child's own ref when we clone it inside asChild.\n */\nexport function mergeRefs<T>(...refs: Array<Ref<T> | null | undefined>) {\n  return (node: T) => {\n    for (const ref of refs) {\n      if (!ref) continue;\n      if (typeof ref === \"function\") ref(node);\n      else (ref as React.RefObject<T>).current = node;\n    }\n  };\n}\n",
+      "content": "import { Ref } from \"react\";\n/**\n * Merges multiple refs onto one callback ref.\n * Avoids losing the child's own ref when we clone it inside asChild.\n */\nexport function mergeRefs<T>(...refs: Array<Ref<T> | null | undefined>) {\n  return (node: T) => {\n    for (const ref of refs) {\n      if (!ref) continue;\n      if (typeof ref === \"function\") ref(node);\n      else (ref as React.RefObject<T | null>).current = node;\n    }\n  };\n}\n",
       "type": "registry:lib"
     }
   ],

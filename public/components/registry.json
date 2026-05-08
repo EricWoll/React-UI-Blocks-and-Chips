@@ -23,17 +23,23 @@
             ]
         },
         {
-            "name": "autoComplete",
+            "name": "autocomplete",
             "type": "registry:ui",
             "registryDependencies": [
                 "https://react-chips-and-blocks.netlify.app/components/useKeyboard.json",
 
-                "https://react-chips-and-blocks.netlify.app/components/cnTool.json"
+                "https://react-chips-and-blocks.netlify.app/components/cnTool.json",
+
+                "https://react-chips-and-blocks.netlify.app/components/dropdown.json"
             ],
             "files": [
                 {
-                    "path": "src/components/ui/autoComplete/autoComplete.components.tsx",
+                    "path": "src/components/ui/autocomplete/autocomplete.components.tsx",
                     "type": "registry:ui"
+                },
+                {
+                    "path": "src/components/ui/autocomplete/autocomplete.contexts.tsx",
+                    "type": "registry:item"
                 }
             ]
         },
@@ -68,7 +74,9 @@
 
                 "https://react-chips-and-blocks.netlify.app/components/cnTool.json",
 
-                "https://react-chips-and-blocks.netlify.app/components/createId.json"
+                "https://react-chips-and-blocks.netlify.app/components/createId.json",
+
+                "https://react-chips-and-blocks.netlify.app/components/dismissableLayer.json"
             ],
             "files": [
                 {
