@@ -1,11 +1,12 @@
-"use client";
+'use client';
 
-import { DialogProvider, useDialog } from "./dialog.contexts";
-import { useCallback } from "react";
-import { Portal } from "@/components/ui/portal/portal.components";
-import { useBodyScrollLock } from "@/hooks/bodyScrollLock/useBodyScrollLock.hooks";
-import { useKeyboard } from "@/hooks/useKeyboard.hooks";
-import { cn } from "@/lib/tools/cn.tools";
+import { DialogProvider, useDialog } from './dialog.contexts';
+import { useCallback, useRef, useEffect } from 'react';
+import { Portal } from '@/components/ui/portal/portal.components';
+import { useBodyScrollLock } from '@/hooks/bodyScrollLock/useBodyScrollLock.hooks';
+import { useKeyboard } from '@/hooks/useKeyboard.hooks';
+import { cn } from '@/lib/tools/cn.tools';
+import { useDismissableLayer } from '@/lib/contexts/reactContexts/dismissal.contexts';
 
 interface DialogProps {
     children: React.ReactNode;
@@ -66,7 +67,7 @@ function Dialog({
         </DialogProvider>
     );
 }
-Dialog.displayName = "Dialog";
+Dialog.displayName = 'Dialog';
 
 interface iDialogContent extends React.HTMLAttributes<HTMLDivElement> {
     children: React.ReactNode;
@@ -74,6 +75,7 @@ interface iDialogContent extends React.HTMLAttributes<HTMLDivElement> {
     windowContainerClasssName?: string;
     captureScroll?: boolean;
     disableEscapeKey?: boolean;
+    ignoreElementRefs?: React.RefObject<HTMLElement | null>[];
 }
 
 /**
@@ -92,11 +94,32 @@ function DialogContent({
     captureScroll = true,
     disableEscapeKey = false,
     className,
+    ignoreElementRefs,
     onClick,
     ...props
 }: iDialogContent) {
     const { isOpen, isControlled, dialogId, setIsOpen } = useDialog();
     useBodyScrollLock(isOpen && captureScroll);
+
+    const dialogRef = useRef<HTMLDivElement>(null);
+    const ignoreElementRefsRef = useRef(ignoreElementRefs);
+    useEffect(() => {
+        ignoreElementRefsRef.current = ignoreElementRefs;
+    }, [ignoreElementRefs]);
+
+    const getRoots = useCallback(
+        () => [
+            dialogRef.current,
+            ...(ignoreElementRefsRef.current?.map((r) => r.current) ?? []),
+        ],
+        [],
+    );
+
+    useDismissableLayer({
+        enabled: isOpen ?? false,
+        getRoots,
+        onDismiss: () => controlledOutsideClick,
+    });
 
     const handleInnerClick = useCallback(
         (event: React.MouseEvent<HTMLDivElement>) => {
@@ -117,7 +140,7 @@ function DialogContent({
     useKeyboard(
         [
             {
-                chord: [{ key: "Escape" }],
+                chord: [{ key: 'Escape' }],
                 handler: disableEscapeKey ? () => {} : handleOutsideClick,
             },
         ],
@@ -133,16 +156,17 @@ function DialogContent({
         <Portal layer="Dialog" zIndex={1000}>
             <div
                 className={cn(
-                    "fixed inset-0 bg-black/50 w-screen h-screen flex justify-center items-center z-100",
+                    'fixed inset-0 bg-black/50 w-screen h-screen flex justify-center items-center z-100',
                     windowContainerClasssName,
                 )}
                 aria-hidden={!isOpen}
                 onClick={handleOutsideClick}
-                style={{ pointerEvents: "auto" }}
+                style={{ pointerEvents: 'auto' }}
+                ref={dialogRef}
             >
                 <div
                     className={cn(
-                        "w-150 h-120 bg-white z-102 overflow-y-auto",
+                        'w-150 h-120 bg-white z-102 overflow-y-auto',
                         className,
                     )}
                     {...props}
@@ -158,7 +182,7 @@ function DialogContent({
         </Portal>
     );
 }
-DialogContent.displayName = "DialogContent";
+DialogContent.displayName = 'DialogContent';
 
 /**
  * Button for the Dialog Component
@@ -169,17 +193,16 @@ DialogContent.displayName = "DialogContent";
  * @param {boolean} [ignoreDialogDisable] - Ignore the dialog disable state
  * @param {React.HTMLAttributes<HTMLButtonElement>} props - Additional HTML div attributes
  */
-interface DialogButtonProps
-    extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface DialogButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     children: React.ReactNode;
-    trigger?: "open" | "close" | "toggle";
+    trigger?: 'open' | 'close' | 'toggle';
     ignoreDialogDisable?: boolean;
 }
 
 function DialogButton({
     children,
     onClick,
-    trigger = "toggle",
+    trigger = 'toggle',
     className,
     ignoreDialogDisable = true,
     disabled,
@@ -196,13 +219,13 @@ function DialogButton({
         (e: React.MouseEvent<HTMLButtonElement>) => {
             onClick?.(e);
             switch (trigger) {
-                case "toggle":
+                case 'toggle':
                     toggleOpen();
                     break;
-                case "close":
+                case 'close':
                     setIsOpen(false);
                     break;
-                case "open":
+                case 'open':
                     setIsOpen(true);
                     break;
             }
@@ -215,7 +238,7 @@ function DialogButton({
             {...props}
             disabled={!ignoreDialogDisable && (disabled || dialogIsDisabled)}
             onClick={handleClick}
-            className={cn("select-none cursor-pointer", className)}
+            className={cn('select-none cursor-pointer', className)}
             data-variant={trigger}
             data-open={isOpen}
         >
@@ -223,7 +246,7 @@ function DialogButton({
         </button>
     );
 }
-DialogButton.displayName = "DialogButton";
+DialogButton.displayName = 'DialogButton';
 
 interface DialogHeaderProps {
     children: React.ReactNode;
@@ -237,14 +260,14 @@ function DialogHeader({
     children,
     containerProps,
     headerProps,
-    closeButton = "X",
+    closeButton = 'X',
     buttonProps,
 }: DialogHeaderProps) {
     return (
         <div
             {...containerProps}
             className={cn(
-                "flex flex-nowrap justify-between items-center select-none",
+                'flex flex-nowrap justify-between items-center select-none',
                 containerProps?.className,
             )}
         >
@@ -253,7 +276,7 @@ function DialogHeader({
                 {...buttonProps}
                 trigger="close"
                 className={cn(
-                    "hover:bg-gray-200 p-1 rounded",
+                    'hover:bg-gray-200 p-1 rounded',
                     buttonProps?.className,
                 )}
             >
@@ -262,6 +285,6 @@ function DialogHeader({
         </div>
     );
 }
-DialogHeader.displayName = "DialogHeader";
+DialogHeader.displayName = 'DialogHeader';
 
 export { type DialogProps, Dialog, DialogContent, DialogButton, DialogHeader };

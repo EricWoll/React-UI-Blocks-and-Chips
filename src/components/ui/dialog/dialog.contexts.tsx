@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
     useState,
@@ -8,8 +8,8 @@ import {
     useCallback,
     useRef,
     useEffect,
-} from "react";
-import createId from "@/lib/tools/createId.tools";
+} from 'react';
+import createId from '@/lib/tools/createId.tools';
 
 interface DialogContext {
     isOpen: boolean;
@@ -62,7 +62,7 @@ function DialogProvider({
     const open = isControlled ? isOpen : uncontrolled;
 
     const prevOpenRef = useRef(open);
-    const dialogIdRef = useRef<string>(createId(dialogId, "dialog"));
+    const dialogIdRef = useRef<string>(createId(dialogId, 'dialog'));
 
     useEffect(() => {
         if (isDisabled) return;
@@ -111,7 +111,7 @@ function DialogProvider({
         </DialogContext.Provider>
     );
 }
-DialogProvider.displayName = "DialogProvider";
+DialogProvider.displayName = 'DialogProvider';
 
 /**
  * Hook to access collapsible context.
@@ -123,10 +123,10 @@ DialogProvider.displayName = "DialogProvider";
 function useDialog() {
     const context = useContext(DialogContext);
     if (!context) {
-        throw new Error("useDialog must be used within a DialogProvider");
+        throw new Error('useDialog must be used within a DialogProvider');
     }
     return context;
 }
-useDialog.displayName = "useDialog";
+useDialog.displayName = 'useDialog';
 
 export { DialogProvider, useDialog };

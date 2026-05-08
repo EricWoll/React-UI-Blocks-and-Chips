@@ -28,7 +28,9 @@
             "registryDependencies": [
                 "https://react-chips-and-blocks.netlify.app/components/useKeyboard.json",
 
-                "https://react-chips-and-blocks.netlify.app/components/cnTool.json"
+                "https://react-chips-and-blocks.netlify.app/components/cnTool.json",
+
+                "https://react-chips-and-blocks.netlify.app/components/select.json"
             ],
             "files": [
                 {
@@ -68,7 +70,9 @@
 
                 "https://react-chips-and-blocks.netlify.app/components/cnTool.json",
 
-                "https://react-chips-and-blocks.netlify.app/components/createId.json"
+                "https://react-chips-and-blocks.netlify.app/components/createId.json",
+
+                "https://react-chips-and-blocks.netlify.app/components/dismissableLayer.json"
             ],
             "files": [
                 {

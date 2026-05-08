@@ -1,55 +1,55 @@
-"use client";
+'use client';
 
 import {
-  useCallback,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type MouseEvent,
-  type ReactNode,
-} from "react";
+    useCallback,
+    useId,
+    useLayoutEffect,
+    useRef,
+    useState,
+    type KeyboardEvent,
+    type MouseEvent,
+    type ReactNode,
+} from 'react';
 import {
-  Dropdown,
-  type DropdownContentProps,
-  type DropdownGroupProps,
-  type DropdownItemProps,
-  type DropdownLabelProps,
-  type DropdownSeparatorProps,
-  type DropdownTriggerProps,
-} from "@/components/ui/dropdown/dropdown.components";
-import { cn } from "@/lib/tools/cn.tools";
-import { SelectContext, useSelect } from "./select.contexts";
+    Dropdown,
+    type DropdownContentProps,
+    type DropdownGroupProps,
+    type DropdownItemProps,
+    type DropdownLabelProps,
+    type DropdownSeparatorProps,
+    type DropdownTriggerProps,
+} from '@/components/ui/dropdown/dropdown.components';
+import { cn } from '@/lib/tools/cn.tools';
+import { SelectContext, useSelect } from './select.contexts';
 
 // ─── Helper ──────────────────────────────────────────────────────────────────
 
 function normalise(
-  v: string | string[] | undefined,
-  multiple: boolean,
+    v: string | string[] | undefined,
+    multiple: boolean,
 ): string | string[] {
-  if (multiple) return Array.isArray(v) ? v : v ? [v] : [];
-  return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
+    if (multiple) return Array.isArray(v) ? v : v ? [v] : [];
+    return Array.isArray(v) ? (v[0] ?? '') : (v ?? '');
 }
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
 type SelectProps = {
-  children: ReactNode;
-  /**
-   * Controlled value. string for single, string[] for multi.
-   * Pair with onValueChange.
-   */
-  value?: string | string[];
-  onValueChange?: (value: string | string[]) => void;
-  /** Uncontrolled default value. */
-  defaultValue?: string | string[];
-  /** Allow multiple items to be selected. Defaults to false. */
-  multiple?: boolean;
-  disabled?: boolean;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  defaultOpen?: boolean;
+    children: ReactNode;
+    /**
+     * Controlled value. string for single, string[] for multi.
+     * Pair with onValueChange.
+     */
+    value?: string | string[];
+    onValueChange?: (value: string | string[]) => void;
+    /** Uncontrolled default value. */
+    defaultValue?: string | string[];
+    /** Allow multiple items to be selected. Defaults to false. */
+    multiple?: boolean;
+    disabled?: boolean;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    defaultOpen?: boolean;
 };
 /**
  * `<Select>`
@@ -102,118 +102,123 @@ type SelectProps = {
  * ```
  */
 function Select({
-  children,
-  value: controlledValue,
-  onValueChange,
-  defaultValue,
-  multiple = false,
-  disabled,
-  open,
-  onOpenChange,
-  defaultOpen,
+    children,
+    value: controlledValue,
+    onValueChange,
+    defaultValue,
+    multiple = false,
+    disabled,
+    open,
+    onOpenChange,
+    defaultOpen,
 }: SelectProps) {
-  const isValueControlled = controlledValue !== undefined;
+    const isValueControlled = controlledValue !== undefined;
 
-  const [uncontrolledValue, setUncontrolledValue] = useState<string | string[]>(
-    () => normalise(defaultValue, multiple),
-  );
+    const [uncontrolledValue, setUncontrolledValue] = useState<
+        string | string[]
+    >(() => normalise(defaultValue, multiple));
 
-  const value = isValueControlled
-    ? normalise(controlledValue, multiple)
-    : uncontrolledValue;
+    const value = isValueControlled
+        ? normalise(controlledValue, multiple)
+        : uncontrolledValue;
 
-  // Open state is delegated to Dropdown — we just pass it through.
-  const [internalOpen, setInternalOpen] = useState(defaultOpen ?? false);
-  const isOpen = open !== undefined ? open : internalOpen;
+    // Open state is delegated to Dropdown — we just pass it through.
+    const [internalOpen, setInternalOpen] = useState(defaultOpen ?? false);
+    const isOpen = open !== undefined ? open : internalOpen;
 
-  const handleOpenChange = useCallback(
-    (next: boolean) => {
-      setInternalOpen(next);
-      onOpenChange?.(next);
-    },
-    [onOpenChange],
-  );
+    const handleOpenChange = useCallback(
+        (next: boolean) => {
+            setInternalOpen(next);
+            onOpenChange?.(next);
+        },
+        [onOpenChange],
+    );
 
-  // Label registry — Select.Item registers its textContent label on mount
-  // so Trigger can surface it without the developer wiring it up manually.
-  const labelMapRef = useRef<Map<string, string>>(new Map());
+    // Label registry — Select.Item registers its textContent label on mount
+    // so Trigger can surface it without the developer wiring it up manually.
+    const labelMapRef = useRef<Map<string, string>>(new Map());
 
-  const registerLabel = useCallback((v: string, label: string) => {
-    labelMapRef.current.set(v, label);
-  }, []);
+    const registerLabel = useCallback((v: string, label: string) => {
+        labelMapRef.current.set(v, label);
+    }, []);
 
-  const unregisterLabel = useCallback((v: string) => {
-    labelMapRef.current.delete(v);
-  }, []);
+    const unregisterLabel = useCallback((v: string) => {
+        labelMapRef.current.delete(v);
+    }, []);
 
-  const isSelected = useCallback(
-    (v: string) =>
-      multiple ? (value as string[]).includes(v) : (value as string) === v,
-    [value, multiple],
-  );
+    const isSelected = useCallback(
+        (v: string) =>
+            multiple
+                ? (value as string[]).includes(v)
+                : (value as string) === v,
+        [value, multiple],
+    );
 
-  const select = useCallback(
-    (v: string, _e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
-      let next: string | string[];
+    const select = useCallback(
+        (
+            v: string,
+            _e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>,
+        ) => {
+            let next: string | string[];
 
-      if (multiple) {
-        const current = value as string[];
-        next = current.includes(v)
-          ? current.filter((x) => x !== v)
-          : [...current, v];
-      } else {
-        next = v;
-      }
+            if (multiple) {
+                const current = value as string[];
+                next = current.includes(v)
+                    ? current.filter((x) => x !== v)
+                    : [...current, v];
+            } else {
+                next = v;
+            }
 
-      if (!isValueControlled) setUncontrolledValue(next);
-      onValueChange?.(next);
-    },
-    [multiple, value, isValueControlled, onValueChange],
-  );
+            if (!isValueControlled) setUncontrolledValue(next);
+            onValueChange?.(next);
+        },
+        [multiple, value, isValueControlled, onValueChange],
+    );
 
-  // Derive ordered display labels from the current value.
-  const labels = (
-    multiple ? (value as string[]) : value ? [value as string] : []
-  )
-    .map((v) => labelMapRef.current.get(v))
-    .filter((l): l is string => l !== undefined);
+    // Derive ordered display labels from the current value.
+    const labels = (
+        multiple ? (value as string[]) : value ? [value as string] : []
+    )
+        .map((v) => labelMapRef.current.get(v))
+        .filter((l): l is string => l !== undefined);
 
-  return (
-    <SelectContext.Provider
-      value={{
-        multiple,
-        value,
-        isSelected,
-        select,
-        registerLabel,
-        unregisterLabel,
-        labels,
-        isOpen,
-      }}
-    >
-      <Dropdown
-        open={isOpen}
-        onOpenChange={handleOpenChange}
-        disabled={disabled}
-        defaultOpen={defaultOpen}
-      >
-        {children}
-      </Dropdown>
-    </SelectContext.Provider>
-  );
+    return (
+        <SelectContext.Provider
+            value={{
+                multiple,
+                value,
+                isSelected,
+                select,
+                registerLabel,
+                unregisterLabel,
+                labels,
+                isOpen,
+            }}
+        >
+            <Dropdown
+                open={isOpen}
+                onOpenChange={handleOpenChange}
+                disabled={disabled}
+                defaultOpen={defaultOpen}
+            >
+                {children}
+            </Dropdown>
+        </SelectContext.Provider>
+    );
 }
 
 // ─── Trigger ──────────────────────────────────────────────────────────────────
 
 type SelectTriggerRenderProps = {
-  /** Current raw value(s). string in single mode, string[] in multi mode. */
-  value: string | string[];
-  /** Display labels of the selected item(s) in selection order. */
-  labels: string[];
-  isOpen: boolean;
+    /** Current raw value(s). string in single mode, string[] in multi mode. */
+    value: string | string[];
+    /** Display labels of the selected item(s) in selection order. */
+    labels: string[];
+    isOpen: boolean;
 };
-type SelectTriggerProps = Omit<DropdownTriggerProps, "children"> & {
-  children: ReactNode | ((props: SelectTriggerRenderProps) => ReactNode);
+type SelectTriggerProps = Omit<DropdownTriggerProps, 'children'> & {
+    children: ReactNode | ((props: SelectTriggerRenderProps) => ReactNode);
 };
 
 /**
@@ -240,19 +245,19 @@ type SelectTriggerProps = Omit<DropdownTriggerProps, "children"> & {
  * ```
  */
 function SelectTrigger({ children, ...rest }: SelectTriggerProps) {
-  const { value, labels, isOpen, multiple } = useSelect();
+    const { value, labels, isOpen, multiple } = useSelect();
 
-  const rendered =
-    typeof children === "function"
-      ? children({ value, labels, isOpen })
-      : children;
+    const rendered =
+        typeof children === 'function'
+            ? children({ value, labels, isOpen })
+            : children;
 
-  return <Dropdown.Trigger {...rest}>{rendered}</Dropdown.Trigger>;
+    return <Dropdown.Trigger {...rest}>{rendered}</Dropdown.Trigger>;
 }
 
 // ─── Content ──────────────────────────────────────────────────────────────────
 
-type SelectContentProps = Omit<DropdownContentProps, "role">;
+type SelectContentProps = Omit<DropdownContentProps, 'role'>;
 /**
  * `<Select.Content>`
  *
@@ -261,17 +266,17 @@ type SelectContentProps = Omit<DropdownContentProps, "role">;
  *
  */
 function SelectContent({ ...rest }: SelectContentProps) {
-  return <Dropdown.Content {...rest} role="listbox" />;
+    return <Dropdown.Content {...rest} role="listbox" />;
 }
 
 // ─── Item ─────────────────────────────────────────────────────────────────────
 
-type SelectItemProps = Omit<DropdownItemProps, "onSelect" | "asChild"> & {
-  value: string;
-  onSelect?: (
-    value: string,
-    e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>,
-  ) => void;
+type SelectItemProps = Omit<DropdownItemProps, 'onSelect' | 'asChild'> & {
+    value: string;
+    onSelect?: (
+        value: string,
+        e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>,
+    ) => void;
 };
 /**
  * `<Select.Item>`
@@ -297,61 +302,61 @@ type SelectItemProps = Omit<DropdownItemProps, "onSelect" | "asChild"> & {
  * ```
  */
 function SelectItem({
-  children,
-  value,
-  disabled = false,
-  onSelect,
-  className,
-  itemId: propId,
-  ...rest
+    children,
+    value,
+    disabled = false,
+    onSelect,
+    className,
+    itemId: propId,
+    ...rest
 }: SelectItemProps) {
-  const autoId = useId();
-  const selectItemId = propId ?? autoId;
+    const autoId = useId();
+    const selectItemId = propId ?? autoId;
 
-  const { isSelected, select, multiple, registerLabel, unregisterLabel } =
-    useSelect();
-  const selected = isSelected(value);
+    const { isSelected, select, multiple, registerLabel, unregisterLabel } =
+        useSelect();
+    const selected = isSelected(value);
 
-  // Capture the item's text label on mount via a layout effect so the trigger
-  // can render it. We use a ref to the wrapper div rather than cloneElement
-  // so we don't interfere with Dropdown.Item's own ref handling.
-  const wrapperRef = useRef<HTMLDivElement | null>(null);
+    // Capture the item's text label on mount via a layout effect so the trigger
+    // can render it. We use a ref to the wrapper div rather than cloneElement
+    // so we don't interfere with Dropdown.Item's own ref handling.
+    const wrapperRef = useRef<HTMLDivElement | null>(null);
 
-  useLayoutEffect(() => {
-    const el = wrapperRef.current;
-    if (!el) return;
-    registerLabel(value, el.textContent?.trim() ?? value);
-    return () => unregisterLabel(value);
-  }, [value, registerLabel, unregisterLabel]);
+    useLayoutEffect(() => {
+        const el = wrapperRef.current;
+        if (!el) return;
+        registerLabel(value, el.textContent?.trim() ?? value);
+        return () => unregisterLabel(value);
+    }, [value, registerLabel, unregisterLabel]);
 
-  const handleSelect = useCallback(
-    (e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
-      if (disabled) return;
-      select(value, e);
-      onSelect?.(value, e);
-      // In multi mode, prevent Dropdown.Item from closing the panel so the
-      // user can continue picking items.
-      if (multiple) e.preventDefault();
-    },
-    [disabled, multiple, select, value, onSelect],
-  );
+    const handleSelect = useCallback(
+        (e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
+            if (disabled) return;
+            select(value, e);
+            onSelect?.(value, e);
+            // In multi mode, prevent Dropdown.Item from closing the panel so the
+            // user can continue picking items.
+            if (multiple) e.preventDefault();
+        },
+        [disabled, multiple, select, value, onSelect],
+    );
 
-  return (
-    // Wrapper div is solely for label capture — zero visual impact.
-    <div ref={wrapperRef} style={{ display: "contents" }}>
-      <Dropdown.Item
-        {...rest}
-        data-item-id={selectItemId}
-        disabled={disabled}
-        data-selected={selected}
-        aria-selected={selected}
-        className={cn("data-[selected=true]:font-medium", className)}
-        onSelect={handleSelect}
-      >
-        {children}
-      </Dropdown.Item>
-    </div>
-  );
+    return (
+        // Wrapper div is solely for label capture — zero visual impact.
+        <div ref={wrapperRef} style={{ display: 'contents' }}>
+            <Dropdown.Item
+                {...rest}
+                data-item-id={selectItemId}
+                disabled={disabled}
+                data-selected={selected}
+                aria-selected={selected}
+                className={cn('data-[selected=true]:font-medium', className)}
+                onSelect={handleSelect}
+            >
+                {children}
+            </Dropdown.Item>
+        </div>
+    );
 }
 
 // ─── Pass-throughs ────────────────────────────────────────────────────────────
@@ -363,7 +368,7 @@ type SelectGroupProps = DropdownGroupProps;
  * Pass-through to `Dropdown.Group`. Use for labelled groups of options.
  */
 function SelectGroup(props: SelectGroupProps) {
-  return <Dropdown.Group {...props} />;
+    return <Dropdown.Group {...props} />;
 }
 
 type SelectSeparatorProps = DropdownSeparatorProps;
@@ -373,7 +378,7 @@ type SelectSeparatorProps = DropdownSeparatorProps;
  * Pass-through to `Dropdown.Separator`.
  */
 function SelectSeparator(props: SelectSeparatorProps) {
-  return <Dropdown.Separator {...props} />;
+    return <Dropdown.Separator {...props} />;
 }
 
 type SelectLabelProps = DropdownLabelProps;
@@ -383,7 +388,7 @@ type SelectLabelProps = DropdownLabelProps;
  * Pass-through to `Dropdown.Label`. Prefer `Select.Group` for grouped options.
  */
 function SelectLabel(props: SelectLabelProps) {
-  return <Dropdown.Label {...props} />;
+    return <Dropdown.Label {...props} />;
 }
 
 // ─── Compound export ──────────────────────────────────────────────────────────
@@ -397,12 +402,12 @@ Select.Label = SelectLabel;
 
 export { Select };
 export type {
-  SelectProps,
-  SelectTriggerProps,
-  SelectTriggerRenderProps,
-  SelectContentProps,
-  SelectItemProps,
-  SelectGroupProps,
-  SelectSeparatorProps,
-  SelectLabelProps,
+    SelectProps,
+    SelectTriggerProps,
+    SelectTriggerRenderProps,
+    SelectContentProps,
+    SelectItemProps,
+    SelectGroupProps,
+    SelectSeparatorProps,
+    SelectLabelProps,
 };
