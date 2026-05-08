@@ -526,7 +526,7 @@ function DropdownContent({
             role={role}
             aria-labelledby={triggerId}
             className={cn(
-                'min-w-[10rem] rounded-lg p-1 pointer-events-auto',
+                'min-w-40 rounded-lg p-1 pointer-events-auto',
                 'border border-zinc-200 bg-white shadow-md shadow-zinc-200/60',
                 'text-sm text-zinc-800',
                 'max-h-[min(var(--dropdown-max-h,320px),calc(100vh-2rem))] overflow-y-auto',
