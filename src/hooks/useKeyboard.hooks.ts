@@ -63,13 +63,14 @@ export type Shortcut = {
   preventDefault?: boolean;
   stopPropagation?: boolean;
 
-  /** per-shortcut activation */
   when?: boolean | (() => boolean);
+
+  priority?: number; // ✅ added
 };
 
 export type UseKeyboardOptions = {
   target?: HTMLElement | "global";
-  when?: boolean; // global enable/disable
+  when?: boolean;
   mapCtrlToMetaOnMac?: boolean;
   sequenceTimeout?: number;
   capture?: boolean;
@@ -142,22 +143,31 @@ export function useKeyboard(
   }: UseKeyboardOptions = {},
 ): void {
   const shortcutsRef = useRef<Shortcut[]>([]);
-  const timeoutRef = useRef<number | null>(null);
   const stepsRef = useRef<number[]>([]);
+  const timeoutRef = useRef<number | null>(null);
+
+  const optionsRef = useRef({
+    when,
+    mapCtrlToMetaOnMac,
+    sequenceTimeout,
+  });
 
   shortcutsRef.current = Array.isArray(shortcuts) ? shortcuts : [shortcuts];
 
-  useEffect(() => {
-    if (!when) return;
+  optionsRef.current = {
+    when,
+    mapCtrlToMetaOnMac,
+    sequenceTimeout,
+  };
 
+  useEffect(() => {
     const el = target === "global" ? window : target;
     if (!el) return;
 
-    const currentShortcuts = shortcutsRef.current;
-    stepsRef.current = currentShortcuts.map(() => 0);
+    stepsRef.current = shortcutsRef.current.map(() => 0);
 
     function reset() {
-      stepsRef.current = currentShortcuts.map(() => 0);
+      stepsRef.current = shortcutsRef.current.map(() => 0);
 
       if (timeoutRef.current !== null) {
         clearTimeout(timeoutRef.current);
@@ -171,24 +181,29 @@ export function useKeyboard(
     }
 
     function onKeyDown(e: KeyboardEvent) {
+      const { when, mapCtrlToMetaOnMac, sequenceTimeout } = optionsRef.current;
+
+      if (!when) return;
+
       const activeElement = document.activeElement;
-      const shortcuts = shortcutsRef.current;
+
+      // sort by priority (higher first)
+      const sorted = shortcutsRef.current
+        .map((sc, i) => ({ sc, i }))
+        .sort((a, b) => (b.sc.priority ?? 0) - (a.sc.priority ?? 0));
 
       let progressed = false;
 
-      for (let i = 0; i < shortcuts.length; i++) {
-        const sc = shortcuts[i];
+      for (let j = 0; j < sorted.length; j++) {
+        const { sc, i } = sorted[j];
 
-        // per-shortcut "when"
         if (!evaluateWhen(sc.when)) continue;
 
-        // includeInputs fix
         if (!sc.includeInputs && isEditableTarget(activeElement)) {
           continue;
         }
 
         const steps = Array.isArray(sc.chord) ? sc.chord : [sc.chord];
-
         const index = stepsRef.current[i];
         const step = steps[index];
 
@@ -220,13 +235,13 @@ export function useKeyboard(
       }
     }
 
-    el.addEventListener("keydown", onKeyDown as EventListener, { capture });
+    const listener = (e: Event) => onKeyDown(e as KeyboardEvent);
+
+    el.addEventListener("keydown", listener, { capture });
 
     return () => {
-      el.removeEventListener("keydown", onKeyDown as EventListener, {
-        capture,
-      });
+      el.removeEventListener("keydown", listener, { capture });
       reset();
     };
-  }, [target, when, capture, sequenceTimeout]);
+  }, [target, capture]);
 }

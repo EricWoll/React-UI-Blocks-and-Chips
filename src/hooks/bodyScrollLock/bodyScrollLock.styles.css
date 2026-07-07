@@ -22,6 +22,7 @@ body {
   overflow-y: auto;   /* main scroll container */
   overflow-x: hidden; /* prevent horizontal drift */
   overscroll-behavior: none; /* Prevent Scroll Chaining */
+  scrollbar-gutter: stable;
 }
 
 .modal,
