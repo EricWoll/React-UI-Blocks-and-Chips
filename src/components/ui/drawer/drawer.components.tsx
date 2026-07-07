@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo, useRef } from 'react';
-import { cn } from '@/lib/tools/cn.tools';
-import { Portal } from '@/components/ui/portal/portal.components';
+import React, { useEffect, useMemo, useRef } from "react";
+import { cn } from "@/lib/tools/cn.tools";
+import { Portal } from "@/components/ui/portal/portal.components";
 
-type DrawerDirection = 'left' | 'right' | 'top' | 'bottom';
+type DrawerDirection = "left" | "right" | "top" | "bottom";
 
 type DrawerOptions = {
     zIndexBase?: number;
@@ -42,7 +42,7 @@ function Drawer({
         zIndexBase = 50,
         durationMs = 300,
         hasBackground = true,
-        direction = 'left',
+        direction = "left",
         sizePx = null,
     } = options;
 
@@ -82,38 +82,38 @@ function Drawer({
         }
     }, [isOpen, durationMs]);
 
-    const isHorizontal = direction === 'left' || direction === 'right';
+    const isHorizontal = direction === "left" || direction === "right";
 
     const resolvedSize = useMemo(() => {
         if (sizePx !== null && sizePx !== undefined) return sizePx;
-        if (typeof window === 'undefined') {
+        if (typeof window === "undefined") {
             return isHorizontal ? 288 : 600;
         }
         return isHorizontal ? 288 : Math.round(window.innerHeight * 0.8);
     }, [isHorizontal, sizePx]);
 
     const sizeStyle: React.CSSProperties = isHorizontal
-        ? { width: resolvedSize, maxWidth: '85vw', height: '100vh' }
-        : { height: resolvedSize, maxHeight: '85vh', width: '100%' };
+        ? { width: resolvedSize, maxWidth: "85vw", height: "100vh" }
+        : { height: resolvedSize, maxHeight: "85vh", width: "100%" };
 
-    const positionClasses = cn('fixed overflow-hidden', {
-        'top-0 bottom-0': isHorizontal,
-        'left-0': direction === 'left',
-        'right-0': direction === 'right',
-        'left-0 right-0': !isHorizontal,
-        'top-0': direction === 'top',
-        'bottom-0': direction === 'bottom',
+    const positionClasses = cn("fixed overflow-hidden", {
+        "top-0 bottom-0": isHorizontal,
+        "left-0": direction === "left",
+        "right-0": direction === "right",
+        "left-0 right-0": !isHorizontal,
+        "top-0": direction === "top",
+        "bottom-0": direction === "bottom",
     });
 
     const closedTransform: Record<DrawerDirection, string> = {
-        left: 'translateX(-100%)',
-        right: 'translateX(100%)',
-        top: 'translateY(-100%)',
-        bottom: 'translateY(100%)',
+        left: "translateX(-100%)",
+        right: "translateX(100%)",
+        top: "translateY(-100%)",
+        bottom: "translateY(100%)",
     };
 
     const transformValue = isOpen
-        ? 'translate(0,0)'
+        ? "translate(0,0)"
         : closedTransform[direction];
 
     return (
@@ -126,10 +126,10 @@ function Drawer({
                     aria-hidden="true"
                     onClick={toggleOpen}
                     className={cn(
-                        'fixed inset-0 transition-opacity duration-300',
+                        "fixed inset-0 transition-opacity duration-300",
                         isOpen
-                            ? 'opacity-100 pointer-events-auto'
-                            : 'opacity-0 pointer-events-none',
+                            ? "opacity-100 pointer-events-auto"
+                            : "opacity-0 pointer-events-none",
                     )}
                     style={{ zIndex: zIndexBase }}
                     {...backgroundProps}
@@ -150,26 +150,26 @@ function Drawer({
                 // Must be absent (not false) when open.
                 {...(!isOpen
                     ? ({
-                          inert: '',
+                          inert: true,
                       } as unknown as React.HTMLAttributes<HTMLDivElement>)
                     : {})}
                 {...drawerProps}
                 className={cn(
                     positionClasses,
-                    'shadow-lg bg-white pointer-events-auto',
-                    'overflow-y-auto',
+                    "shadow-lg bg-white pointer-events-auto",
+                    "overflow-y-auto",
                     drawerProps?.className,
                 )}
                 style={{
                     ...sizeStyle,
                     transform: transformValue,
                     transition: `transform ${durationMs}ms ease-in-out`,
-                    willChange: 'transform',
+                    willChange: "transform",
                     zIndex: zIndexBase + 1,
                     ...drawerProps?.style,
                 }}
                 onKeyDown={(e) => {
-                    if (e.key === 'Escape' && isOpen) toggleOpen();
+                    if (e.key === "Escape" && isOpen) toggleOpen();
                     drawerProps?.onKeyDown?.(e);
                 }}
             >
@@ -181,6 +181,6 @@ function Drawer({
     );
 }
 
-Drawer.displayName = 'Drawer';
+Drawer.displayName = "Drawer";
 
 export { type DrawerOptions, Drawer };
