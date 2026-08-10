@@ -65,7 +65,7 @@ export type Shortcut = {
 
   when?: boolean | (() => boolean);
 
-  priority?: number; // ✅ added
+  priority?: number;
 };
 
 export type UseKeyboardOptions = {

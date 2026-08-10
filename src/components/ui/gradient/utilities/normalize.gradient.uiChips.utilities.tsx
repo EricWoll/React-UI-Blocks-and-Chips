@@ -14,7 +14,7 @@ import {
     buildRotateKeyframes,
     buildBlobMorphKeyframes,
     buildSquiggleKeyframes,
-} from '../utilities/animations.gradient.uiChips.utilities';
+} from './animations.gradient.uiChips.utilities';
 import {
     injectCSSOnce,
     uniqueName,

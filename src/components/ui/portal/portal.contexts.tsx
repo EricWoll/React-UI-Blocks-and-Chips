@@ -2,71 +2,120 @@
 
 import {
   createContext,
-  useContext,
-  useRef,
   useCallback,
-  ReactNode,
+  useContext,
   useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
 } from "react";
 
 interface LayerOptions {
   zIndex?: number;
 }
 
+interface LayerRecord {
+  element: HTMLDivElement;
+  users: Map<symbol, number | undefined>;
+}
+
 interface PortalContextValue {
-  getLayer: (name: string, options?: LayerOptions) => HTMLElement;
+  acquireLayer(
+    name: string,
+    owner: symbol,
+    options?: LayerOptions,
+  ): HTMLElement;
+  releaseLayer(name: string, owner: symbol): void;
 }
 
 const PortalContext = createContext<PortalContextValue | null>(null);
 
+function syncZIndex(record: LayerRecord) {
+  const values = [...record.users.values()].filter(
+    (value): value is number => value !== undefined,
+  );
+  record.element.style.zIndex = values.length
+    ? String(Math.max(...values))
+    : "";
+}
+
 export function PortalProvider({ children }: { children: ReactNode }) {
-  const layersRef = useRef<Map<string, HTMLElement>>(new Map());
+  const layersRef = useRef(new Map<string, LayerRecord>());
 
-  const getLayer = useCallback((name: string, options?: LayerOptions) => {
-    let el = layersRef.current.get(name);
+  const acquireLayer = useCallback(
+    (name: string, owner: symbol, options?: LayerOptions) => {
+      let record = layersRef.current.get(name);
 
-    if (!el) {
-      el = document.createElement("div");
-      el.id = `portal-layer-${name}`;
-      el.dataset.portalLayer = name;
-      el.style.position = "fixed";
-      el.style.inset = "0";
-      el.style.pointerEvents = "none";
-      document.body.appendChild(el);
-      layersRef.current.set(name, el);
+      if (!record) {
+        const element = document.createElement("div");
+        element.id = `portal-layer-${name}`;
+        element.dataset.portalLayer = name;
+        element.style.position = "fixed";
+        element.style.inset = "0";
+        element.style.pointerEvents = "none";
+        document.body.appendChild(element);
+
+        record = { element, users: new Map() };
+        layersRef.current.set(name, record);
+      }
+
+      record.users.set(owner, options?.zIndex);
+      syncZIndex(record);
+      return record.element;
+    },
+    [],
+  );
+
+  const releaseLayer = useCallback((name: string, owner: symbol) => {
+    const record = layersRef.current.get(name);
+    if (!record) return;
+
+    record.users.delete(owner);
+    if (record.users.size === 0) {
+      record.element.remove();
+      layersRef.current.delete(name);
+      return;
     }
 
-    // Always sync options so the last caller wins (e.g. zIndex updates after
-    // the layer is first created). Previously, options set on first creation
-    // were permanent — a silent footgun when the same layer was used with
-    // different zIndex values across the tree.
-    if (options?.zIndex != null) {
-      el.style.zIndex = String(options.zIndex);
-    }
-
-    return el;
+    syncZIndex(record);
   }, []);
 
   useLayoutEffect(() => {
+    const layers = layersRef.current;
     return () => {
-      for (const el of layersRef.current.values()) {
-        el.remove();
-      }
-      layersRef.current.clear();
+      for (const record of layers.values()) record.element.remove();
+      layers.clear();
     };
   }, []);
 
+  const value = useMemo(
+    () => ({ acquireLayer, releaseLayer }),
+    [acquireLayer, releaseLayer],
+  );
+
   return (
-    <PortalContext.Provider value={{ getLayer }}>
-      {children}
-    </PortalContext.Provider>
+    <PortalContext.Provider value={value}>{children}</PortalContext.Provider>
   );
 }
 
 export function usePortalLayer(name: string, options?: LayerOptions) {
-  const ctx = useContext(PortalContext);
-  if (!ctx) {
-    throw new Error("usePortalLayer must be used inside <PortalProvider />");
+  const context = useContext(PortalContext);
+  if (!context) {
+    throw new Error("usePortalLayer must be used inside <PortalProvider>.");
   }
-  return ctx.getLayer(name, options);
+
+  const ownerRef = useRef<symbol | null>(null);
+  if (ownerRef.current === null) ownerRef.current = Symbol(name);
+  const owner = ownerRef.current;
+  const [element, setElement] = useState<HTMLElement | null>(null);
+  const zIndex = options?.zIndex;
+
+  useLayoutEffect(() => {
+    const next = context.acquireLayer(name, owner, { zIndex });
+    setElement(next);
+    return () => context.releaseLayer(name, owner);
+  }, [context, name, owner, zIndex]);
+
+  return element;
 }

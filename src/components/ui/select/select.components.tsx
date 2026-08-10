@@ -2,8 +2,9 @@
 
 import {
   useCallback,
+  useEffect,
   useId,
-  useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
@@ -20,182 +21,274 @@ import {
   type DropdownTriggerProps,
 } from "@/components/ui/dropdown/dropdown.components";
 import { cn } from "@/lib/tools/cn.tools";
-import { SelectContext, useSelect } from "./select.contexts";
+import {
+  SelectContext,
+  useSelect,
+  type SelectEvent,
+  type SelectOption,
+  type SelectValue,
+} from "./select.contexts";
 
-// ─── Helper ──────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-function normalise(
-  v: string | string[] | undefined,
-  multiple: boolean,
-): string | string[] {
-  if (multiple) return Array.isArray(v) ? v : v ? [v] : [];
-  return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
+type SelectBaseProps = {
+  children: ReactNode;
+
+  /**
+   * The authoritative option metadata.
+   *
+   * Labels live here instead of being discovered from mounted Select.Item DOM.
+   * That makes labels available during the first render, while the popup is
+   * closed, during SSR, and when the option list is virtualized.
+   */
+  options: readonly SelectOption[];
+
+  disabled?: boolean;
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+};
+
+type SingleSelectProps = SelectBaseProps & {
+  multiple?: false;
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+};
+
+type MultipleSelectProps = SelectBaseProps & {
+  multiple: true;
+  value?: string[];
+  defaultValue?: string[];
+  onValueChange?: (value: string[]) => void;
+};
+
+export type SelectProps = SingleSelectProps | MultipleSelectProps;
+
+export type SelectTriggerRenderProps = {
+  value: SelectValue;
+  selectedValues: readonly string[];
+  labels: readonly string[];
+  isOpen: boolean;
+};
+
+export type SelectTriggerProps = Omit<DropdownTriggerProps, "children"> & {
+  children: ReactNode | ((props: SelectTriggerRenderProps) => ReactNode);
+};
+
+export type SelectContentProps = Omit<DropdownContentProps, "role">;
+
+export type SelectItemProps = Omit<
+  DropdownItemProps,
+  "onSelect" | "asChild" | "role" | "aria-selected"
+> & {
+  value: string;
+  onSelect?: (value: string, event: SelectEvent) => void;
+};
+
+export type SelectGroupProps = DropdownGroupProps;
+export type SelectSeparatorProps = DropdownSeparatorProps;
+export type SelectLabelProps = DropdownLabelProps;
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function normalizeValue(value: SelectValue | undefined, multiple: boolean) {
+  if (multiple) {
+    if (Array.isArray(value)) return value;
+    return value ? [value] : [];
+  }
+
+  if (Array.isArray(value)) return value[0] ?? "";
+  return value ?? "";
+}
+
+function selectionArray(value: SelectValue, multiple: boolean): string[] {
+  if (multiple) return value as string[];
+  return value ? [value as string] : [];
 }
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
-type SelectProps = {
-  children: ReactNode;
-  /**
-   * Controlled value. string for single, string[] for multi.
-   * Pair with onValueChange.
-   */
-  value?: string | string[];
-  onValueChange?: (value: string | string[]) => void;
-  /** Uncontrolled default value. */
-  defaultValue?: string | string[];
-  /** Allow multiple items to be selected. Defaults to false. */
-  multiple?: boolean;
-  disabled?: boolean;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  defaultOpen?: boolean;
-};
-/**
- * `<Select>`
- *
- * Layered on top of `<Dropdown>`. Owns value state and exposes it to
- * `Select.Trigger` via a render prop and to `Select.Item` via context.
- * `Dropdown` is never touched — Select is purely additive.
- *
- * @example Single (uncontrolled)
- * ```tsx
- * <Select defaultValue="apple">
- *   <Select.Trigger>
- *     {({ labels }) => <span>{labels[0] ?? "Pick a fruit"}</span>}
- *   </Select.Trigger>
- *   <Select.Content>
- *     <Select.Item value="apple">Apple</Select.Item>
- *     <Select.Item value="banana">Banana</Select.Item>
- *   </Select.Content>
- * </Select>
- * ```
- *
- * @example Multi (controlled)
- * ```tsx
- * <Select multiple value={selected} onValueChange={setSelected}>
- *   <Select.Trigger>
- *     {({ labels }) => <span>{labels.join(", ") || "Pick fruits"}</span>}
- *   </Select.Trigger>
- *   <Select.Content>
- *     <Select.Item value="apple">Apple</Select.Item>
- *     <Select.Item value="banana">Banana</Select.Item>
- *   </Select.Content>
- * </Select>
- * ```
- *
- * @example Grouped with separator
- * ```tsx
- * <Select>
- *   <Select.Trigger>{({ labels }) => labels[0] ?? "Select"}</Select.Trigger>
- *   <Select.Content>
- *     <Select.Group label="Fruits">
- *       <Select.Item value="apple">Apple</Select.Item>
- *       <Select.Item value="banana">Banana</Select.Item>
- *     </Select.Group>
- *     <Select.Separator />
- *     <Select.Group label="Veggies">
- *       <Select.Item value="carrot">Carrot</Select.Item>
- *     </Select.Group>
- *   </Select.Content>
- * </Select>
- * ```
- */
-function Select({
-  children,
-  value: controlledValue,
-  onValueChange,
-  defaultValue,
-  multiple = false,
-  disabled,
-  open,
-  onOpenChange,
-  defaultOpen,
-}: SelectProps) {
-  const isValueControlled = controlledValue !== undefined;
+function Select(props: SelectProps) {
+  const {
+    children,
+    options,
+    multiple = false,
+    disabled = false,
+    open: controlledOpen,
+    defaultOpen = false,
+    onOpenChange,
+  } = props;
 
-  const [uncontrolledValue, setUncontrolledValue] = useState<string | string[]>(
-    () => normalise(defaultValue, multiple),
+  const controlledValue = props.value;
+  const defaultValue = props.defaultValue;
+  const onValueChange = props.onValueChange;
+
+  const isValueControlled = controlledValue !== undefined;
+  const isOpenControlled = controlledOpen !== undefined;
+
+  const [uncontrolledValue, setUncontrolledValue] = useState<SelectValue>(() =>
+    normalizeValue(defaultValue, multiple),
   );
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
 
   const value = isValueControlled
-    ? normalise(controlledValue, multiple)
-    : uncontrolledValue;
+    ? normalizeValue(controlledValue, multiple)
+    : normalizeValue(uncontrolledValue, multiple);
+  const selectedValues = selectionArray(value, multiple);
+  const isOpen = isOpenControlled ? controlledOpen : uncontrolledOpen;
 
-  // Open state is delegated to Dropdown — we just pass it through.
-  const [internalOpen, setInternalOpen] = useState(defaultOpen ?? false);
-  const isOpen = open !== undefined ? open : internalOpen;
+  const optionMap = useMemo(() => {
+    const map = new Map<string, SelectOption>();
 
-  const handleOpenChange = useCallback(
-    (next: boolean) => {
-      setInternalOpen(next);
-      onOpenChange?.(next);
-    },
-    [onOpenChange],
+    for (const option of options) {
+      if (process.env.NODE_ENV !== "production" && map.has(option.value)) {
+        console.warn(
+          `Select received duplicate option value "${option.value}". ` +
+            "Option values must be unique.",
+        );
+      }
+
+      map.set(option.value, option);
+    }
+
+    return map;
+  }, [options]);
+
+  const labels = useMemo(
+    () =>
+      selectedValues.map(
+        (selectedValue) => optionMap.get(selectedValue)?.label ?? selectedValue,
+      ),
+    [optionMap, selectedValues],
   );
 
-  // Label registry — Select.Item registers its textContent label on mount
-  // so Trigger can surface it without the developer wiring it up manually.
-  const labelMapRef = useRef<Map<string, string>>(new Map());
+  const valueRef = useRef(value);
+  valueRef.current = value;
 
-  const registerLabel = useCallback((v: string, label: string) => {
-    labelMapRef.current.set(v, label);
-  }, []);
+  const onValueChangeRef = useRef(onValueChange);
+  onValueChangeRef.current = onValueChange;
 
-  const unregisterLabel = useCallback((v: string) => {
-    labelMapRef.current.delete(v);
-  }, []);
+  const onOpenChangeRef = useRef(onOpenChange);
+  onOpenChangeRef.current = onOpenChange;
+
+  const initialValueControlRef = useRef(isValueControlled);
+  const initialOpenControlRef = useRef(isOpenControlled);
+  const initialMultipleRef = useRef(multiple);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
+
+    if (initialValueControlRef.current !== isValueControlled) {
+      console.warn(
+        "Select changed between controlled and uncontrolled value mode. " +
+          "Use either value or defaultValue for the component lifetime.",
+      );
+    }
+
+    if (initialOpenControlRef.current !== isOpenControlled) {
+      console.warn(
+        "Select changed between controlled and uncontrolled open mode. " +
+          "Use either open or defaultOpen for the component lifetime.",
+      );
+    }
+
+    if (initialMultipleRef.current !== multiple) {
+      console.warn(
+        "Select changed its multiple mode after mounting. " +
+          "Keep multiple stable for the component lifetime.",
+      );
+    }
+  }, [isOpenControlled, isValueControlled, multiple]);
+
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (!isOpenControlled) setUncontrolledOpen(nextOpen);
+      onOpenChangeRef.current?.(nextOpen);
+    },
+    [isOpenControlled],
+  );
+
+  const getOption = useCallback(
+    (optionValue: string) => optionMap.get(optionValue),
+    [optionMap],
+  );
 
   const isSelected = useCallback(
-    (v: string) =>
-      multiple ? (value as string[]).includes(v) : (value as string) === v,
-    [value, multiple],
+    (optionValue: string) => {
+      const current = valueRef.current;
+      return multiple
+        ? (current as string[]).includes(optionValue)
+        : current === optionValue;
+    },
+    [multiple],
   );
 
   const select = useCallback(
-    (v: string, _e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
-      let next: string | string[];
+    (optionValue: string) => {
+      const option = optionMap.get(optionValue);
+      if (option?.disabled) return;
+
+      const current = valueRef.current;
+      let nextValue: SelectValue;
 
       if (multiple) {
-        const current = value as string[];
-        next = current.includes(v)
-          ? current.filter((x) => x !== v)
-          : [...current, v];
+        const currentValues = current as string[];
+        nextValue = currentValues.includes(optionValue)
+          ? currentValues.filter((value) => value !== optionValue)
+          : [...currentValues, optionValue];
       } else {
-        next = v;
+        nextValue = optionValue;
       }
 
-      if (!isValueControlled) setUncontrolledValue(next);
-      onValueChange?.(next);
+      // Avoid stale calculations if more than one selection occurs before the
+      // parent or React state has committed the previous update.
+      valueRef.current = nextValue;
+
+      if (!isValueControlled) setUncontrolledValue(nextValue);
+
+      if (multiple) {
+        (onValueChangeRef.current as ((value: string[]) => void) | undefined)?.(
+          nextValue as string[],
+        );
+      } else {
+        (onValueChangeRef.current as ((value: string) => void) | undefined)?.(
+          nextValue as string,
+        );
+      }
     },
-    [multiple, value, isValueControlled, onValueChange],
+    [isValueControlled, multiple, optionMap],
   );
 
-  // Derive ordered display labels from the current value.
-  const labels = (
-    multiple ? (value as string[]) : value ? [value as string] : []
-  )
-    .map((v) => labelMapRef.current.get(v))
-    .filter((l): l is string => l !== undefined);
+  const contextValue = useMemo(
+    () => ({
+      multiple,
+      value,
+      selectedValues,
+      labels,
+      isOpen,
+      getOption,
+      isSelected,
+      select,
+    }),
+    [
+      multiple,
+      value,
+      selectedValues,
+      labels,
+      isOpen,
+      getOption,
+      isSelected,
+      select,
+    ],
+  );
 
   return (
-    <SelectContext.Provider
-      value={{
-        multiple,
-        value,
-        isSelected,
-        select,
-        registerLabel,
-        unregisterLabel,
-        labels,
-        isOpen,
-      }}
-    >
+    <SelectContext.Provider value={contextValue}>
       <Dropdown
         open={isOpen}
         onOpenChange={handleOpenChange}
         disabled={disabled}
-        defaultOpen={defaultOpen}
       >
         {children}
       </Dropdown>
@@ -205,183 +298,90 @@ function Select({
 
 // ─── Trigger ──────────────────────────────────────────────────────────────────
 
-type SelectTriggerRenderProps = {
-  /** Current raw value(s). string in single mode, string[] in multi mode. */
-  value: string | string[];
-  /** Display labels of the selected item(s) in selection order. */
-  labels: string[];
-  isOpen: boolean;
-};
-type SelectTriggerProps = Omit<DropdownTriggerProps, "children"> & {
-  children: ReactNode | ((props: SelectTriggerRenderProps) => ReactNode);
-};
+function SelectTrigger({ children, ...props }: SelectTriggerProps) {
+  const { value, selectedValues, labels, isOpen } = useSelect();
 
-/**
- * `<Select.Trigger>`
- *
- * Pass a render prop as children to access current selection state.
- * Plain children work too — the render prop is optional.
- * All other props forward to `Dropdown.Trigger`.
- *
- * Data attributes (from Dropdown.Trigger):
- * - `data-open="true|false"`
- * - `data-disabled="true|false"`
- *
- * @example
- * ```tsx
- * <Select.Trigger>
- *   {({ labels, isOpen }) => (
- *     <>
- *       <span>{labels[0] ?? "Select…"}</span>
- *       <ChevronDownIcon className={cn("transition-transform", isOpen && "rotate-180")} />
- *     </>
- *   )}
- * </Select.Trigger>
- * ```
- */
-function SelectTrigger({ children, ...rest }: SelectTriggerProps) {
-  const { value, labels, isOpen, multiple } = useSelect();
-
-  const rendered =
+  const renderedChildren =
     typeof children === "function"
-      ? children({ value, labels, isOpen })
+      ? children({ value, selectedValues, labels, isOpen })
       : children;
 
-  return <Dropdown.Trigger {...rest}>{rendered}</Dropdown.Trigger>;
+  return <Dropdown.Trigger {...props}>{renderedChildren}</Dropdown.Trigger>;
 }
 
 // ─── Content ──────────────────────────────────────────────────────────────────
 
-type SelectContentProps = Omit<DropdownContentProps, "role">;
-/**
- * `<Select.Content>`
- *
- * Thin wrapper around `Dropdown.Content` that fixes `role="listbox"` —
- * the correct ARIA role for a value picker. All other props are forwarded.
- *
- */
-function SelectContent({ ...rest }: SelectContentProps) {
-  return <Dropdown.Content {...rest} role="listbox" />;
+function SelectContent(props: SelectContentProps) {
+  return <Dropdown.Content {...props} role="listbox" />;
 }
 
 // ─── Item ─────────────────────────────────────────────────────────────────────
 
-type SelectItemProps = Omit<DropdownItemProps, "onSelect" | "asChild"> & {
-  value: string;
-  onSelect?: (
-    value: string,
-    e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>,
-  ) => void;
-};
-/**
- * `<Select.Item>`
- *
- * Wraps `Dropdown.Item`. Takes a `value` prop — everything else is the same.
- * Registers its `textContent` as the display label on mount so `Select.Trigger`
- * can render the selected label without extra wiring.
- *
- * In multi mode the panel stays open after selection.
- * In single mode it closes as normal.
- *
- * Data attributes:
- * - `data-highlighted="true|false"` — from Dropdown.Item
- * - `data-disabled="true|false"`   — from Dropdown.Item
- * - `data-selected="true|false"`   — set by Select, reflects actual value state
- *
- * @example
- * ```tsx
- * <Select.Item value="apple">
- *   <AppleIcon />
- *   Apple
- * </Select.Item>
- * ```
- */
 function SelectItem({
   children,
   value,
-  disabled = false,
+  disabled: disabledProp,
   onSelect,
   className,
-  itemId: propId,
-  ...rest
+  itemId,
+  ...props
 }: SelectItemProps) {
-  const autoId = useId();
-  const selectItemId = propId ?? autoId;
+  const generatedId = useId();
+  const resolvedItemId = itemId ?? generatedId;
+  const { multiple, getOption, isSelected, select } = useSelect();
 
-  const { isSelected, select, multiple, registerLabel, unregisterLabel } =
-    useSelect();
+  const option = getOption(value);
+  const disabled = disabledProp ?? option?.disabled ?? false;
   const selected = isSelected(value);
 
-  // Capture the item's text label on mount via a layout effect so the trigger
-  // can render it. We use a ref to the wrapper div rather than cloneElement
-  // so we don't interfere with Dropdown.Item's own ref handling.
-  const wrapperRef = useRef<HTMLDivElement | null>(null);
-
-  useLayoutEffect(() => {
-    const el = wrapperRef.current;
-    if (!el) return;
-    registerLabel(value, el.textContent?.trim() ?? value);
-    return () => unregisterLabel(value);
-  }, [value, registerLabel, unregisterLabel]);
+  if (process.env.NODE_ENV !== "production" && !option) {
+    console.warn(
+      `Select.Item value "${value}" is missing from the Select options prop.`,
+    );
+  }
 
   const handleSelect = useCallback(
-    (e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
+    (event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
       if (disabled) return;
-      select(value, e);
-      onSelect?.(value, e);
-      // In multi mode, prevent Dropdown.Item from closing the panel so the
-      // user can continue picking items.
-      if (multiple) e.preventDefault();
+
+      onSelect?.(value, event);
+      if (event.defaultPrevented) return;
+
+      select(value);
+
+      // Dropdown.Item closes by default. Multi-select keeps the panel open so
+      // the user can continue toggling options.
+      if (multiple) event.preventDefault();
     },
-    [disabled, multiple, select, value, onSelect],
+    [disabled, multiple, onSelect, select, value],
   );
 
   return (
-    // Wrapper div is solely for label capture — zero visual impact.
-    <div ref={wrapperRef} style={{ display: "contents" }}>
-      <Dropdown.Item
-        {...rest}
-        data-item-id={selectItemId}
-        disabled={disabled}
-        data-selected={selected}
-        aria-selected={selected}
-        className={cn("data-[selected=true]:font-medium", className)}
-        onSelect={handleSelect}
-      >
-        {children}
-      </Dropdown.Item>
-    </div>
+    <Dropdown.Item
+      {...props}
+      itemId={resolvedItemId}
+      role="option"
+      disabled={disabled}
+      aria-selected={selected}
+      data-selected={selected}
+      className={cn("data-[selected=true]:font-medium", className)}
+      onSelect={handleSelect}
+    >
+      {children}
+    </Dropdown.Item>
   );
 }
 
 // ─── Pass-throughs ────────────────────────────────────────────────────────────
 
-type SelectGroupProps = DropdownGroupProps;
-/**
- * `<Select.Group>`
- *
- * Pass-through to `Dropdown.Group`. Use for labelled groups of options.
- */
 function SelectGroup(props: SelectGroupProps) {
   return <Dropdown.Group {...props} />;
 }
 
-type SelectSeparatorProps = DropdownSeparatorProps;
-/**
- * `<Select.Separator>`
- *
- * Pass-through to `Dropdown.Separator`.
- */
 function SelectSeparator(props: SelectSeparatorProps) {
   return <Dropdown.Separator {...props} />;
 }
 
-type SelectLabelProps = DropdownLabelProps;
-/**
- * `<Select.Label>`
- *
- * Pass-through to `Dropdown.Label`. Prefer `Select.Group` for grouped options.
- */
 function SelectLabel(props: SelectLabelProps) {
   return <Dropdown.Label {...props} />;
 }
@@ -395,14 +395,4 @@ Select.Group = SelectGroup;
 Select.Separator = SelectSeparator;
 Select.Label = SelectLabel;
 
-export { Select };
-export type {
-  SelectProps,
-  SelectTriggerProps,
-  SelectTriggerRenderProps,
-  SelectContentProps,
-  SelectItemProps,
-  SelectGroupProps,
-  SelectSeparatorProps,
-  SelectLabelProps,
-};
+export { Select, useSelect };

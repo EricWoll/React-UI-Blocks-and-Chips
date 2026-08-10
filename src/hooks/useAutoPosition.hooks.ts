@@ -1,326 +1,647 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useRef, useEffect } from "react";
-import useWindowSize from "@/hooks/useWindowSize.hooks";
+import { useCallback, useLayoutEffect, useRef, type RefObject } from "react";
 
 export type Placement = "top" | "bottom" | "left" | "right";
+
 export type Align = "start" | "center" | "end";
 
-/**
- * "fixed"    — positions relative to the viewport. Use with portals or any
- *              element with `position: fixed`. Coordinates come directly from
- *              getBoundingClientRect().
- *
- * "absolute" — positions relative to the popover's offset parent. Use when
- *              the popover is rendered inline (not in a portal) inside a
- *              `position: relative` container. Viewport coords are converted
- *              into the offset parent's coordinate space.
- */
 export type PositionStrategy = "fixed" | "absolute";
 
 export type UseAutoPositionOptions = {
   /**
-   * Where to render the popover relative to the anchor. Accepts either a
-   * single placement or a priority-ordered list.
+   * Controls whether positioning observers and event listeners are active.
    *
-   * When a list is provided, the hook tries each placement in order and uses
-   * the first one that fits in the viewport. If none fit, it falls back to
-   * the first entry (and clamps or closes depending on strategy).
+   * Pass the dropdown's open state so the hook attaches to the newly mounted
+   * popup element each time the dropdown opens.
    *
-   * @example ["bottom", "top"]           // prefer bottom, flip to top
-   * @example ["right", "left", "bottom"]  // right-first with two fallbacks
-   * @default "bottom"
+   * @default true
    */
-  placement?: Placement | Placement[];
-  align?: Align;
-  strategy?: PositionStrategy;
+  enabled?: boolean;
+
   /**
-   * Called when the anchor leaves the viewport or there is no room on either
-   * side. Only meaningful for "fixed" strategy — when using "absolute", the
-   * anchor scrolling away is expected behavior and you likely don't want this.
+   * Preferred placement or ordered placement fallbacks.
+   *
+   * @default ["bottom", "top", "right", "left"]
+   */
+  placement?: Placement | readonly Placement[];
+
+  /**
+   * Alignment along the placement's cross-axis.
+   *
+   * @default "center"
+   */
+  align?: Align;
+
+  /**
+   * Whether the popup uses viewport-relative or offset-parent-relative
+   * coordinates.
+   *
+   * @default "fixed"
+   */
+  strategy?: PositionStrategy;
+
+  /**
+   * Called when the anchor is completely outside the visual viewport.
    */
   onClose?: () => void;
+
   /**
-   * Gap in px between the anchor edge and the popover. Default: 8.
+   * Space between the anchor and popup.
+   *
+   * @default 8
    */
   gap?: number;
+
   /**
-   * Minimum distance from the viewport edge when clamping. Default: 4.
-   * Only applied for "fixed" strategy.
+   * Minimum space between the popup and viewport edges.
+   *
+   * @default 8
    */
   viewportPadding?: number;
 };
 
-/**
- * useAutoPosition
- *
- * Positions a popover relative to an anchor element. Supports both viewport
- * (fixed) and offset-parent (absolute) coordinate strategies.
- *
- * The popover element must have `position: fixed` when using strategy="fixed",
- * or `position: absolute` when using strategy="absolute".
- *
- * Features:
- * - Auto-flip to opposite side when the preferred placement doesn't fit
- * - Auto-close (fixed only) when anchor leaves viewport or no side has room
- * - Mobile zoom offset correction via visualViewport (fixed only)
- * - Re-positions on scroll (synchronous, no rAF gap), resize (rAF-throttled),
- *   and anchor element resize (ResizeObserver)
- */
+type Point = {
+  top: number;
+  left: number;
+};
+
+type Viewport = {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+};
+
+function getOverflow(
+  point: Point,
+  popupWidth: number,
+  popupHeight: number,
+  viewport: Viewport,
+  padding: number,
+): number {
+  const viewportLeft = viewport.left + padding;
+
+  const viewportTop = viewport.top + padding;
+
+  const viewportRight = viewport.left + viewport.width - padding;
+
+  const viewportBottom = viewport.top + viewport.height - padding;
+
+  const leftOverflow = Math.max(0, viewportLeft - point.left);
+
+  const rightOverflow = Math.max(0, point.left + popupWidth - viewportRight);
+
+  const topOverflow = Math.max(0, viewportTop - point.top);
+
+  const bottomOverflow = Math.max(0, point.top + popupHeight - viewportBottom);
+
+  return leftOverflow + rightOverflow + topOverflow + bottomOverflow;
+}
+
+function getScrollParents(element: Element | null): Array<Element | Window> {
+  const parents: Array<Element | Window> = [];
+
+  let current = element?.parentElement ?? null;
+
+  while (current) {
+    const style = window.getComputedStyle(current);
+
+    const overflow = [style.overflow, style.overflowX, style.overflowY].join(
+      " ",
+    );
+
+    if (/(auto|scroll|overlay|hidden|clip)/.test(overflow)) {
+      parents.push(current);
+    }
+
+    current = current.parentElement;
+  }
+
+  parents.push(window);
+
+  return parents;
+}
+
+function isVerticalPlacement(
+  placement: Placement,
+): placement is "top" | "bottom" {
+  return placement === "top" || placement === "bottom";
+}
+
 export function useAutoPosition(
-  anchorRef: React.RefObject<HTMLElement | null>,
-  popoverRef: React.RefObject<HTMLDivElement | null>,
-  {
-    placement = ["bottom", "right", "top", "left"],
-    align = "center",
-    strategy = "fixed",
-    onClose,
-    gap = 8,
-    viewportPadding = 4,
-  }: UseAutoPositionOptions = {},
+  anchorRef: RefObject<HTMLElement | null>,
+  popoverRef: RefObject<HTMLElement | null>,
+  options: UseAutoPositionOptions = {},
 ) {
-  const { wSize: viewport } = useWindowSize();
+  /*
+   * Keep options current without forcing updatePosition and scheduleUpdate
+   * to receive new identities every time an options object is recreated.
+   */
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
 
-  // Keep mutable options in refs — changes should not cause effect re-runs,
-  // only the next updatePosition call picks them up.
-  const placementRef = useRef(placement);
-  placementRef.current = placement;
+  const animationFrameRef = useRef<number | null>(null);
 
-  const alignRef = useRef(align);
-  alignRef.current = align;
+  const lastPositionRef = useRef("");
 
-  const strategyRef = useRef(strategy);
-  strategyRef.current = strategy;
-
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
-
-  const gapRef = useRef(gap);
-  gapRef.current = gap;
-
-  const viewportPaddingRef = useRef(viewportPadding);
-  viewportPaddingRef.current = viewportPadding;
-
-  const viewportRef = useRef(viewport);
-  useLayoutEffect(() => {
-    viewportRef.current = viewport;
-  }, [viewport]);
+  /*
+   * Tracks the specific positioned DOM element.
+   *
+   * A reopened portal creates a new element that can have the same calculated
+   * coordinates as the previous one. Coordinate equality alone is therefore
+   * not enough to skip the style writes.
+   */
+  const positionedElementRef = useRef<HTMLElement | null>(null);
 
   const updatePosition = useCallback(() => {
     const anchor = anchorRef.current;
     const popover = popoverRef.current;
-    if (!anchor || !popover) return;
 
-    const anchorRect = anchor.getBoundingClientRect();
-    const popoverRect = popover.getBoundingClientRect();
-    const { width: vWidth, height: vHeight } = viewportRef.current;
-    const currentGap = gapRef.current;
-    const currentPlacement = placementRef.current;
-    const currentAlign = alignRef.current;
-    const currentStrategy = strategyRef.current;
-    const currentPadding = viewportPaddingRef.current;
-
-    // ---------- CLOSE WHEN ANCHOR LEAVES VIEWPORT (fixed only) ----------
-    if (currentStrategy === "fixed") {
-      const anchorVisible =
-        anchorRect.bottom > 0 &&
-        anchorRect.top < vHeight &&
-        anchorRect.right > 0 &&
-        anchorRect.left < vWidth;
-
-      if (!anchorVisible) {
-        onCloseRef.current?.();
-        return;
-      }
-    }
-
-    // ---------- POSITION CALCULATOR ----------
-    // All math is done in viewport coordinates first (getBoundingClientRect),
-    // then converted to the offset parent's space if strategy is "absolute".
-    const calcPosition = (p: Placement): { top: number; left: number } => {
-      const getHorizontalAlign = (): number => {
-        switch (currentAlign) {
-          case "start":
-            return anchorRect.left;
-          case "center":
-            return (
-              anchorRect.left + anchorRect.width / 2 - popoverRect.width / 2
-            );
-          case "end":
-            return anchorRect.right - popoverRect.width;
-        }
-      };
-
-      const getVerticalAlign = (): number => {
-        switch (currentAlign) {
-          case "start":
-            return anchorRect.top;
-          case "center":
-            return (
-              anchorRect.top + anchorRect.height / 2 - popoverRect.height / 2
-            );
-          case "end":
-            return anchorRect.bottom - popoverRect.height;
-        }
-      };
-
-      switch (p) {
-        case "bottom":
-          return {
-            top: anchorRect.bottom + currentGap,
-            left: getHorizontalAlign(),
-          };
-        case "top":
-          return {
-            top: anchorRect.top - popoverRect.height - currentGap,
-            left: getHorizontalAlign(),
-          };
-        case "right":
-          return {
-            top: getVerticalAlign(),
-            left: anchorRect.right + currentGap,
-          };
-        case "left":
-          return {
-            top: getVerticalAlign(),
-            left: anchorRect.left - popoverRect.width - currentGap,
-          };
-      }
-    };
-
-    // ---------- OVERLAP CHECK ----------
-    const wouldOverlap = (top: number, left: number): boolean => {
-      const right = left + popoverRect.width;
-      const bottom = top + popoverRect.height;
-      return (
-        anchorRect.left < right &&
-        anchorRect.right > left &&
-        anchorRect.top < bottom &&
-        anchorRect.bottom > top
-      );
-    };
-
-    // ---------- VIEWPORT FIT CHECK ----------
-    const fitsInViewport = (p: Placement): boolean => {
-      switch (p) {
-        case "bottom":
-          return anchorRect.bottom + popoverRect.height + currentGap <= vHeight;
-        case "top":
-          return anchorRect.top - popoverRect.height - currentGap >= 0;
-        case "right":
-          return anchorRect.right + popoverRect.width + currentGap <= vWidth;
-        case "left":
-          return anchorRect.left - popoverRect.width - currentGap >= 0;
-      }
-    };
-
-    // ---------- PLACEMENT RESOLUTION ----------
-    // Normalise to an array so single and list placements share one code path.
-    // Try each candidate in order and take the first one that fits. If none
-    // fit, fall back to the first candidate and let the write step clamp/close.
-    const placements = Array.isArray(currentPlacement)
-      ? currentPlacement
-      : [currentPlacement];
-
-    const resolvedPlacement = placements.find(fitsInViewport) ?? placements[0];
-
-    if (!placements.some(fitsInViewport)) {
-      if (currentStrategy === "fixed") {
-        onCloseRef.current?.();
-        return;
-      }
-      // For absolute strategy, fall through and clamp instead of closing.
-    }
-
-    let { top, left } = calcPosition(resolvedPlacement);
-
-    if (wouldOverlap(top, left)) {
-      if (currentStrategy === "fixed") {
-        onCloseRef.current?.();
-        return;
-      }
-      // For absolute, just let it clamp — closing is not our call.
-    }
-
-    // ---------- FIXED: CLAMP TO VIEWPORT + MOBILE ZOOM FIX ----------
-    if (currentStrategy === "fixed") {
-      top = Math.max(
-        currentPadding,
-        Math.min(top, vHeight - popoverRect.height - currentPadding),
-      );
-      left = Math.max(
-        currentPadding,
-        Math.min(left, vWidth - popoverRect.width - currentPadding),
-      );
-
-      // visualViewport offsets correct for pinch-zoom panning on mobile.
-      const vv = window.visualViewport;
-      popover.style.top = `${top + (vv?.offsetTop ?? 0)}px`;
-      popover.style.left = `${left + (vv?.offsetLeft ?? 0)}px`;
+    if (!anchor || !popover || !anchor.isConnected || !popover.isConnected) {
       return;
     }
 
-    // ---------- ABSOLUTE: CONVERT TO OFFSET PARENT SPACE ----------
-    // getBoundingClientRect() gives viewport-relative coords. To get the
-    // correct absolute position we subtract the offset parent's viewport rect,
-    // then add its scroll offset so the value doesn't drift when the container
-    // is scrolled.
-    //
-    // Falls back to documentElement if no offset parent is found (e.g. the
-    // popover is not yet in the DOM or has no positioned ancestor).
-    const offsetParent = (popover.offsetParent ??
-      document.documentElement) as HTMLElement;
-    const parentRect = offsetParent.getBoundingClientRect();
+    const {
+      placement = ["bottom", "top", "right", "left"],
+      align = "center",
+      strategy = "fixed",
+      onClose,
+      gap = 8,
+      viewportPadding = 8,
+    } = optionsRef.current;
 
-    popover.style.top = `${top - parentRect.top + offsetParent.scrollTop}px`;
-    popover.style.left = `${left - parentRect.left + offsetParent.scrollLeft}px`;
+    const placements: readonly Placement[] = Array.isArray(placement)
+      ? placement
+      : [placement];
+
+    if (placements.length === 0) {
+      return;
+    }
+
+    const visualViewport = window.visualViewport;
+
+    const viewport: Viewport = {
+      left: visualViewport?.offsetLeft ?? 0,
+
+      top: visualViewport?.offsetTop ?? 0,
+
+      width: visualViewport?.width ?? document.documentElement.clientWidth,
+
+      height: visualViewport?.height ?? document.documentElement.clientHeight,
+    };
+
+    const viewportLeft = viewport.left + viewportPadding;
+
+    const viewportTop = viewport.top + viewportPadding;
+
+    const viewportRight = viewport.left + viewport.width - viewportPadding;
+
+    const viewportBottom = viewport.top + viewport.height - viewportPadding;
+
+    const anchorRect = anchor.getBoundingClientRect();
+
+    const anchorIsVisible =
+      anchorRect.bottom > viewport.top &&
+      anchorRect.top < viewport.top + viewport.height &&
+      anchorRect.right > viewport.left &&
+      anchorRect.left < viewport.left + viewport.width;
+
+    if (!anchorIsVisible) {
+      onClose?.();
+      return;
+    }
+
+    /*
+     * Remove constraints from the previous calculation before measuring.
+     *
+     * Without this reset, a popup previously constrained to a small height
+     * can remain unnecessarily small after more space becomes available.
+     */
+    popover.style.removeProperty("--dropdown-available-height");
+
+    popover.style.removeProperty("--dropdown-available-width");
+
+    let popoverRect = popover.getBoundingClientRect();
+
+    const getAvailableMainAxisSpace = (candidate: Placement): number => {
+      switch (candidate) {
+        case "bottom":
+          return Math.max(0, viewportBottom - (anchorRect.bottom + gap));
+
+        case "top":
+          return Math.max(0, anchorRect.top - gap - viewportTop);
+
+        case "right":
+          return Math.max(0, viewportRight - (anchorRect.right + gap));
+
+        case "left":
+          return Math.max(0, anchorRect.left - gap - viewportLeft);
+      }
+    };
+
+    const getPoint = (
+      candidate: Placement,
+      popupWidth: number,
+      popupHeight: number,
+    ): Point => {
+      const horizontalPosition =
+        align === "start"
+          ? anchorRect.left
+          : align === "end"
+            ? anchorRect.right - popupWidth
+            : anchorRect.left + (anchorRect.width - popupWidth) / 2;
+
+      const verticalPosition =
+        align === "start"
+          ? anchorRect.top
+          : align === "end"
+            ? anchorRect.bottom - popupHeight
+            : anchorRect.top + (anchorRect.height - popupHeight) / 2;
+
+      switch (candidate) {
+        case "top":
+          return {
+            top: anchorRect.top - popupHeight - gap,
+            left: horizontalPosition,
+          };
+
+        case "bottom":
+          return {
+            top: anchorRect.bottom + gap,
+            left: horizontalPosition,
+          };
+
+        case "left":
+          return {
+            top: verticalPosition,
+            left: anchorRect.left - popupWidth - gap,
+          };
+
+        case "right":
+          return {
+            top: verticalPosition,
+            left: anchorRect.right + gap,
+          };
+      }
+    };
+
+    /*
+     * Prefer the first placement that fully fits.
+     *
+     * If no placement fits, choose the candidate with the least overflow.
+     * When overflow scores tie, choose the side with more usable space.
+     */
+    let resolvedPlacement = placements[0];
+
+    let bestOverflow = Number.POSITIVE_INFINITY;
+
+    let bestAvailableSpace = -1;
+
+    for (const candidate of placements) {
+      const candidatePoint = getPoint(
+        candidate,
+        popoverRect.width,
+        popoverRect.height,
+      );
+
+      const candidateOverflow = getOverflow(
+        candidatePoint,
+        popoverRect.width,
+        popoverRect.height,
+        viewport,
+        viewportPadding,
+      );
+
+      const candidateAvailableSpace = getAvailableMainAxisSpace(candidate);
+
+      const isBetterCandidate =
+        candidateOverflow < bestOverflow ||
+        (candidateOverflow === bestOverflow &&
+          candidateAvailableSpace > bestAvailableSpace);
+
+      if (isBetterCandidate) {
+        resolvedPlacement = candidate;
+        bestOverflow = candidateOverflow;
+        bestAvailableSpace = candidateAvailableSpace;
+      }
+
+      /*
+       * Preserve the caller's fallback priority. The first placement that
+       * completely fits wins.
+       */
+      if (candidateOverflow === 0) {
+        break;
+      }
+    }
+
+    /*
+     * Constrain the popup to the selected side instead of moving it across
+     * the anchor.
+     *
+     * A vertically placed dropdown receives the exact vertical space
+     * available above or below the anchor. Its CSS should use this custom
+     * property as part of max-height and provide overflow-y: auto.
+     */
+    if (isVerticalPlacement(resolvedPlacement)) {
+      const availableHeight = Math.max(
+        0,
+        Math.floor(getAvailableMainAxisSpace(resolvedPlacement)),
+      );
+
+      popover.style.setProperty(
+        "--dropdown-available-height",
+        `${availableHeight}px`,
+      );
+
+      popover.style.setProperty(
+        "--dropdown-available-width",
+        `${Math.max(0, Math.floor(viewportRight - viewportLeft))}px`,
+      );
+    } else {
+      /*
+       * Left and right placements are constrained horizontally. Their height
+       * can use the complete padded viewport.
+       */
+      const availableWidth = Math.max(
+        0,
+        Math.floor(getAvailableMainAxisSpace(resolvedPlacement)),
+      );
+
+      popover.style.setProperty(
+        "--dropdown-available-width",
+        `${availableWidth}px`,
+      );
+
+      popover.style.setProperty(
+        "--dropdown-available-height",
+        `${Math.max(0, Math.floor(viewportBottom - viewportTop))}px`,
+      );
+    }
+
+    /*
+     * Applying the custom size constraints may change the popup dimensions.
+     * Measure again before calculating the final coordinates.
+     */
+    popoverRect = popover.getBoundingClientRect();
+
+    let point = getPoint(
+      resolvedPlacement,
+      popoverRect.width,
+      popoverRect.height,
+    );
+
+    if (isVerticalPlacement(resolvedPlacement)) {
+      /*
+       * For top and bottom placements, vertical placement is sacred.
+       *
+       * Clamp only horizontally so the popup cannot be moved across and over
+       * its anchor.
+       */
+      const maximumLeft = Math.max(
+        viewportLeft,
+        viewportRight - popoverRect.width,
+      );
+
+      point.left = Math.min(Math.max(point.left, viewportLeft), maximumLeft);
+    } else {
+      /*
+       * For left and right placements, horizontal placement is sacred.
+       *
+       * Clamp only vertically.
+       */
+      const maximumTop = Math.max(
+        viewportTop,
+        viewportBottom - popoverRect.height,
+      );
+
+      point.top = Math.min(Math.max(point.top, viewportTop), maximumTop);
+    }
+
+    if (strategy === "absolute") {
+      const offsetParent =
+        (popover.offsetParent as HTMLElement | null) ??
+        document.documentElement;
+
+      const parentRect = offsetParent.getBoundingClientRect();
+
+      point = {
+        top: point.top - parentRect.top + offsetParent.scrollTop,
+
+        left: point.left - parentRect.left + offsetParent.scrollLeft,
+      };
+    }
+
+    const roundedLeft = Math.round(point.left);
+
+    const roundedTop = Math.round(point.top);
+
+    const positionKey = [
+      roundedLeft,
+      roundedTop,
+      resolvedPlacement,
+      strategy,
+      Math.round(popoverRect.width),
+      Math.round(popoverRect.height),
+    ].join(",");
+
+    const isSameElement = positionedElementRef.current === popover;
+
+    const isAlreadyPositioned = popover.dataset.positioned === "true";
+
+    if (
+      isSameElement &&
+      isAlreadyPositioned &&
+      lastPositionRef.current === positionKey
+    ) {
+      return;
+    }
+
+    positionedElementRef.current = popover;
+
+    lastPositionRef.current = positionKey;
+
+    popover.style.position = strategy;
+
+    popover.style.left = `${roundedLeft}px`;
+
+    popover.style.top = `${roundedTop}px`;
+
+    popover.style.visibility = "visible";
+
+    popover.dataset.placement = resolvedPlacement;
+
+    popover.dataset.positioned = "true";
   }, [anchorRef, popoverRef]);
-  // All behavioral options are in refs — only the stable ref objects are deps.
 
-  // Stable ref so scroll/resize handlers always call the latest version
-  // without needing to re-register.
-  const updatePositionRef = useRef(updatePosition);
-  useLayoutEffect(() => {
-    updatePositionRef.current = updatePosition;
-  }, [updatePosition]);
+  const schedulePositionUpdate = useCallback(() => {
+    if (animationFrameRef.current !== null) {
+      return;
+    }
 
-  // ---------- SCROLL (synchronous) ----------
-  // Must not go through rAF or React state — any frame gap causes visible
-  // drift between anchor and popover during scroll.
-  useEffect(() => {
-    const handler = () => updatePositionRef.current();
-    window.addEventListener("scroll", handler, {
-      passive: true,
-      capture: true,
+    animationFrameRef.current = window.requestAnimationFrame(() => {
+      animationFrameRef.current = null;
+
+      updatePosition();
     });
-    return () => window.removeEventListener("scroll", handler, true);
-  }, []);
-
-  // ---------- RESIZE (rAF-throttled via useWindowSize) ----------
-  // rAF throttle is fine here — the user isn't scrolling, so a frame of lag
-  // is imperceptible. useWindowSize already handles the rAF scheduling.
-  // Skip the initial viewport value (handled by the layout effect below) by
-  // only firing when the value actually changes.
-  const prevViewportRef = useRef(viewport);
-  useEffect(() => {
-    if (prevViewportRef.current === viewport) return;
-    prevViewportRef.current = viewport;
-    updatePositionRef.current();
-  }, [viewport]);
-
-  // ---------- ANCHOR RESIZE ----------
-  useLayoutEffect(() => {
-    const anchor = anchorRef.current;
-    if (!anchor) return;
-    const ro = new ResizeObserver(() => updatePositionRef.current());
-    ro.observe(anchor);
-    return () => ro.disconnect();
-  }, [anchorRef]);
-
-  // ---------- INITIAL POSITION ----------
-  useLayoutEffect(() => {
-    updatePosition();
   }, [updatePosition]);
 
-  return { updatePosition };
+  const enabled = options.enabled ?? true;
+
+  useLayoutEffect(() => {
+    if (!enabled) {
+      if (animationFrameRef.current !== null) {
+        window.cancelAnimationFrame(animationFrameRef.current);
+
+        animationFrameRef.current = null;
+      }
+
+      lastPositionRef.current = "";
+      positionedElementRef.current = null;
+
+      return;
+    }
+
+    let resizeObserver: ResizeObserver | null = null;
+
+    let observedAnchor: HTMLElement | null = null;
+
+    let observedPopover: HTMLElement | null = null;
+
+    let scrollParentsList: Array<Element | Window> = [];
+
+    let retryFrame: number | null = null;
+
+    let cancelled = false;
+    let attached = false;
+
+    const attach = () => {
+      if (cancelled || attached) {
+        return;
+      }
+
+      const anchor = anchorRef.current;
+
+      const popover = popoverRef.current;
+
+      /*
+       * Portal content may not exist during this component's first layout
+       * effect. Retry on the next frame until the new popup node is mounted.
+       */
+      if (!anchor || !popover) {
+        retryFrame = window.requestAnimationFrame(attach);
+
+        return;
+      }
+
+      attached = true;
+      observedAnchor = anchor;
+      observedPopover = popover;
+
+      /*
+       * Mark the new popup as unpositioned. It may receive exactly the same
+       * coordinates as the popup from the previous open cycle.
+       */
+      popover.dataset.positioned = "false";
+
+      positionedElementRef.current = null;
+
+      lastPositionRef.current = "";
+
+      updatePosition();
+
+      resizeObserver = new ResizeObserver(() => {
+        schedulePositionUpdate();
+      });
+
+      resizeObserver.observe(anchor);
+      resizeObserver.observe(popover);
+
+      scrollParentsList = [
+        ...new Set([...getScrollParents(anchor), ...getScrollParents(popover)]),
+      ];
+
+      for (const parent of scrollParentsList) {
+        parent.addEventListener("scroll", schedulePositionUpdate, {
+          passive: true,
+        });
+      }
+
+      window.addEventListener("resize", schedulePositionUpdate, {
+        passive: true,
+      });
+
+      window.visualViewport?.addEventListener(
+        "resize",
+        schedulePositionUpdate,
+        {
+          passive: true,
+        },
+      );
+
+      window.visualViewport?.addEventListener(
+        "scroll",
+        schedulePositionUpdate,
+        {
+          passive: true,
+        },
+      );
+    };
+
+    attach();
+
+    return () => {
+      cancelled = true;
+      attached = false;
+
+      if (retryFrame !== null) {
+        window.cancelAnimationFrame(retryFrame);
+      }
+
+      if (animationFrameRef.current !== null) {
+        window.cancelAnimationFrame(animationFrameRef.current);
+
+        animationFrameRef.current = null;
+      }
+
+      resizeObserver?.disconnect();
+
+      for (const parent of scrollParentsList) {
+        parent.removeEventListener("scroll", schedulePositionUpdate);
+      }
+
+      window.removeEventListener("resize", schedulePositionUpdate);
+
+      window.visualViewport?.removeEventListener(
+        "resize",
+        schedulePositionUpdate,
+      );
+
+      window.visualViewport?.removeEventListener(
+        "scroll",
+        schedulePositionUpdate,
+      );
+
+      /*
+       * Only reset the specific nodes observed by this effect. Refs may
+       * already point to nodes belonging to a newer open cycle.
+       */
+      if (observedPopover) {
+        observedPopover.dataset.positioned = "false";
+      }
+
+      observedAnchor = null;
+      observedPopover = null;
+      scrollParentsList = [];
+
+      positionedElementRef.current = null;
+
+      lastPositionRef.current = "";
+    };
+  }, [enabled, anchorRef, popoverRef, schedulePositionUpdate, updatePosition]);
+
+  return {
+    updatePosition,
+    schedulePositionUpdate,
+  };
 }
