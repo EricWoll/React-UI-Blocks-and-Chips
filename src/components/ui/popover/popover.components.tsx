@@ -50,6 +50,7 @@ export function Popover({
   const { updatePosition } = useAutoPosition(anchorRef, popoverRef, {
     placement,
     align,
+    enabled: isOpen,
     strategy: "fixed",
     onClose: dismiss,
   });
@@ -78,10 +79,6 @@ export function Popover({
     getRoots,
     onDismiss: dismiss,
   });
-
-  useLayoutEffect(() => {
-    if (isOpen) updatePosition();
-  }, [isOpen, updatePosition]);
 
   if (!isOpen) return null;
 
